@@ -1,0 +1,116 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useCart } from '../context/CartContext';
+import './Checkout.css';
+
+const Checkout = () => {
+  const { cartItems, getTotalPrice, clearCart } = useCart();
+  const [paymentMethod, setPaymentMethod] = useState('counter');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  const handleCheckout = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    // Validate cart is not empty
+    if (!cartItems || cartItems.length === 0) {
+      setError('Your cart is empty. Please add items before checkout.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const orderData = {
+        items: cartItems.map((item) => {
+          if (!item.menuItemId) {
+            throw new Error(`Invalid cart item: missing menuItemId`);
+          }
+          return {
+            menuItemId: item.menuItemId,
+            quantity: item.quantity,
+          };
+        }),
+        paymentMethod,
+      };
+
+      console.log('Submitting order:', orderData);
+      const response = await axios.post('/api/orders', orderData);
+      clearCart();
+      navigate(`/order-confirmation/${response.data.data.orderId}`);
+    } catch (err) {
+      console.error('Checkout error:', err);
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to place order';
+      setError(errorMessage);
+      
+      // If it's a validation error, show more details
+      if (err.response?.data?.errors) {
+        setError(errorMessage + ': ' + err.response.data.errors.join(', '));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="checkout-container">
+      <div className="container">
+        <h1>Checkout</h1>
+        <form onSubmit={handleCheckout} className="checkout-form">
+          <div className="order-summary">
+            <h2>Order Summary</h2>
+            {cartItems.map((item) => (
+              <div key={item.menuItemId} className="summary-item">
+                <span>
+                  {item.menuItem.name} x {item.quantity}
+                </span>
+                <span>₹{item.menuItem.price * item.quantity}</span>
+              </div>
+            ))}
+            <div className="summary-total">
+              <span>Total:</span>
+              <span>₹{getTotalPrice()}</span>
+            </div>
+          </div>
+
+          <div className="payment-section">
+            <h2>Payment Method</h2>
+            <div className="payment-options">
+              <label className="payment-option">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="counter"
+                  checked={paymentMethod === 'counter'}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />
+                <span>Pay at Counter</span>
+              </label>
+              <label className="payment-option">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="online"
+                  checked={paymentMethod === 'online'}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />
+                <span>Pay Online (Mock)</span>
+              </label>
+            </div>
+          </div>
+
+          {error && <div className="error">{error}</div>}
+
+          <button type="submit" disabled={loading} className="btn-primary">
+            {loading ? 'Placing Order...' : 'Place Order'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default Checkout;

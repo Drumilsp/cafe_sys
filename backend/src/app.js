@@ -37,9 +37,27 @@ const apiLimiter = rateLimit({
 
 app.use('/api', apiLimiter);
 
+/* ===================== API ROUTES ===================== */
+const authRoutes = require('./routes/authRoutes');
+const menuRoutes = require('./routes/menuRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/menu', menuRoutes);
+app.use('/api/orders', orderRoutes);
+
 /* ===================== ROOT ===================== */
 app.get('/', (req, res) => {
   res.json({ message: 'Cafe Ordering Backend Running' });
+});
+
+/* ===================== ERROR HANDLING ===================== */
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    status: 'error',
+    message: err.message || 'Internal server error',
+  });
 });
 
 /* ===================== 404 ===================== */
