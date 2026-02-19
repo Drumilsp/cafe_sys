@@ -297,4 +297,14 @@ ISC
 
 ## 👥 Support
 
+##.ENV
+
 For issues or questions, please open an issue on GitHub.
+MONGO_URI=mongodb+srv://COP_admin:qErV9EUKDjcz9m55@cop.9wjsn7b.mongodb.net/Cafe
+PORT=4000
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_EXPIRES_IN=7d
+NODE_ENV=development
+CLOUDINARY_CLOUD_NAME=dlajiwrm7
+CLOUDINARY_API_KEY=734853892314422
+CLOUDINARY_API_SECRET=CLOUDINARY_URL=cloudinary://734853892314422:6SJncxb5aJZ8qbTD2aF77svD8MI@dlajiwrm7
