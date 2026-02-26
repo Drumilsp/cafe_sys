@@ -16,6 +16,10 @@ const orderItemSchema = new mongoose.Schema({
     required: true,
     min: [0, 'Price must be positive'],
   },
+  prepared: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const orderSchema = new mongoose.Schema(
@@ -51,6 +55,15 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: ['pending', 'preparing', 'ready', 'completed'],
       default: 'pending',
+    },
+    serviceType: {
+      type: String,
+      enum: ['counter', 'table'],
+      default: 'counter',
+    },
+    tableNumber: {
+      type: String,
+      default: null,
     },
   },
   {

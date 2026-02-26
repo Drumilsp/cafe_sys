@@ -22,15 +22,20 @@ const menuSchema = new mongoose.Schema(
       default: 'general',
       trim: true,
     },
-    // you can add imageUrl, description etc later
     imageUrl: {
       type: String,
       default: '',
+    },
+    displayOrder: {
+      type: Number,
+      default: 0,
     },
   },
   {
     timestamps: true, // createdAt + updatedAt automatically handled by mongoose
   }
 );
+
+menuSchema.index({ displayOrder: 1 });
 
 module.exports = mongoose.model('Menu', menuSchema);

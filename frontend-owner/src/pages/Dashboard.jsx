@@ -8,7 +8,8 @@ const Dashboard = () => {
   const [orders, setOrders] = useState([]);
   const [payAtCounterOrders, setPayAtCounterOrders] = useState([]);
   const [eodOrders, setEodOrders] = useState([]);
-  const [activeTab, setActiveTab] = useState('active'); // 'active' | 'eod'
+  const [activeTab, setActiveTab] = useState('active'); // 'active' | 'eod' | 'prep'
+  const [viewMode, setViewMode] = useState('normal'); // 'normal' | 'kitchen'
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [sortBy, setSortBy] = useState('time');
@@ -44,9 +45,10 @@ const Dashboard = () => {
       const counterRes = await axios.get('/api/orders?paymentMethod=counter&paymentStatus=pending&sortBy=time&sortOrder=desc');
       setPayAtCounterOrders(counterRes.data.data);
 
-      if (activeTab === 'active') {
+      if (activeTab === 'active' || activeTab === 'prep' || viewMode === 'kitchen') {
         const params = new URLSearchParams();
         params.append('excludeCounterUnpaid', '1');
+        params.append('todayOnly', '1');
         if (statusFilter !== 'all') params.append('status', statusFilter);
         if (paymentFilter !== 'all') params.append('paymentMethod', paymentFilter);
         params.append('sortBy', sortBy);
@@ -115,6 +117,72 @@ const Dashboard = () => {
     return statusFlow[currentStatus];
   };
 
+  const toggleItemPrepared = async (orderId, itemId, prepared) => {
+    try {
+      await axios.patch(`/api/orders/${orderId}/items/${itemId}/prepared`, { prepared });
+      fetchAllData();
+    } catch (error) {
+      console.error('Failed to update item prepared state:', error);
+      alert('Failed to update item prepared state');
+    }
+  };
+
+  const getItemPrepared = (item) => {
+    return typeof item.prepared === 'boolean' ? item.prepared : false;
+  };
+
+  const buildPrepItems = () => {
+    const map = new Map();
+
+    orders
+      .filter((order) => order.orderStatus !== 'completed')
+      .forEach((order) => {
+        order.items.forEach((item) => {
+          if (!item.menuItem) return;
+          const key = item.menuItem._id || String(item.menuItem);
+
+          if (!map.has(key)) {
+            map.set(key, {
+              menuItemId: key,
+              name: item.menuItem.name,
+              totalQuantity: 0,
+              rows: [],
+            });
+          }
+
+          const entry = map.get(key);
+          entry.totalQuantity += item.quantity;
+          entry.rows.push({
+            orderId: order._id,
+            orderDisplayId: order.orderId,
+            customerName: order.customer?.name,
+            quantity: item.quantity,
+            itemId: item._id,
+            prepared: getItemPrepared(item),
+          });
+        });
+      });
+
+    return Array.from(map.values());
+  };
+
+  const handleCloseDay = async () => {
+    const confirmed = window.confirm('Close day? This will mark all pending and preparing orders today as completed.');
+    if (!confirmed) return;
+    try {
+      await axios.post('/api/orders/close-day');
+      fetchAllData();
+      alert('Day closed. Pending and preparing orders were marked as completed.');
+    } catch (error) {
+      console.error('Failed to close day:', error);
+      alert('Failed to close day');
+    }
+  };
+
+  const kitchenOrders = orders.filter(
+    (order) => order.orderStatus === 'pending' || order.orderStatus === 'preparing'
+  );
+
   if (loading && isInitialLoad) {
     return (
       <div className="dashboard-container">
@@ -133,6 +201,7 @@ const Dashboard = () => {
               ⟳ Refresh
             </button>
             <Link to="/menu" className="nav-link">Manage Menu</Link>
+            <Link to="/manual-order" className="nav-link">Manual Order</Link>
             <span className="user-name">Welcome, {user?.name}</span>
             <button onClick={logout} className="logout-btn">Logout</button>
           </div>
@@ -140,6 +209,22 @@ const Dashboard = () => {
       </header>
 
       <div className="container">
+        <div className="view-toggle">
+          <button
+            className={viewMode === 'normal' ? 'active' : ''}
+            onClick={() => setViewMode('normal')}
+          >
+            Normal View
+          </button>
+          <button
+            className={viewMode === 'kitchen' ? 'active' : ''}
+            onClick={() => setViewMode('kitchen')}
+          >
+            Kitchen Mode
+          </button>
+        </div>
+
+        {viewMode === 'normal' && (
         <div className="main-tabs">
           <button
             onClick={() => setActiveTab('active')}
@@ -153,9 +238,16 @@ const Dashboard = () => {
           >
             Paid & Completed (EOD)
           </button>
+          <button
+            onClick={() => setActiveTab('prep')}
+            className={activeTab === 'prep' ? 'active' : ''}
+          >
+            Items to Prepare
+          </button>
         </div>
+        )}
 
-        {activeTab === 'active' && payAtCounterOrders.length > 0 && (
+        {viewMode === 'normal' && activeTab === 'active' && payAtCounterOrders.length > 0 && (
           <section className="pay-at-counter-section">
             <h2 className="section-title">
               <span className="section-icon">💰</span> Pay at Counter — Collect Payment First
@@ -207,11 +299,11 @@ const Dashboard = () => {
           </section>
         )}
 
-        {activeTab === 'active' && (
+        {viewMode === 'normal' && activeTab === 'active' && (
           <h2 className="section-title main-list-title">Main Orders</h2>
         )}
 
-        {activeTab === 'active' && (
+        {viewMode === 'normal' && activeTab === 'active' && (
         <div className="filters-section">
           <div className="filter-group">
             <label className="filter-label">Status:</label>
@@ -297,7 +389,7 @@ const Dashboard = () => {
         </div>
         )}
 
-        {activeTab === 'active' && (
+        {viewMode === 'normal' && activeTab === 'active' && (
         <div className="orders-list">
           {orders.length === 0 ? (
             <div className="empty-state">No orders in main list. Pay-at-counter orders appear above after you mark them paid.</div>
@@ -325,9 +417,18 @@ const Dashboard = () => {
                 <div className="order-items">
                   {order.items.map((item, index) => (
                     <div key={index} className="order-item">
-                      <span>
-                        {item.menuItem.name} x {item.quantity}
-                      </span>
+                      <label className="order-item-label">
+                        <input
+                          type="checkbox"
+                          checked={getItemPrepared(item)}
+                          onChange={(e) =>
+                            toggleItemPrepared(order._id, item._id, e.target.checked)
+                          }
+                        />
+                        <span>
+                          {item.menuItem.name} x {item.quantity}
+                        </span>
+                      </label>
                       <span>₹{item.priceAtTime * item.quantity}</span>
                     </div>
                   ))}
@@ -366,7 +467,53 @@ const Dashboard = () => {
         </div>
         )}
 
-        {activeTab === 'eod' && (
+        {viewMode === 'normal' && activeTab === 'prep' && (
+          <section className="prep-section">
+            <h2 className="section-title">Items to Prepare</h2>
+            <p className="section-hint">
+              Combined view of all active orders grouped by item. Tick customers as their items are prepared.
+            </p>
+            <div className="orders-list">
+              {orders.length === 0 ? (
+                <div className="empty-state">No active orders to prepare.</div>
+              ) : (
+                buildPrepItems().map((group) => (
+                  <div key={group.menuItemId} className="order-card prep-card">
+                    <div className="order-header">
+                      <div>
+                        <h3>{group.name}</h3>
+                        <p className="order-time">
+                          Total to prepare: {group.totalQuantity}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="order-items">
+                      {group.rows.map((row) => (
+                        <div key={row.itemId} className="order-item">
+                          <label className="order-item-label">
+                            <input
+                              type="checkbox"
+                              checked={row.prepared}
+                              onChange={(e) =>
+                                toggleItemPrepared(row.orderId, row.itemId, e.target.checked)
+                              }
+                            />
+                            <span>
+                              {row.quantity} for {row.customerName || 'Customer'} (Order{' '}
+                              {row.orderDisplayId})
+                            </span>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        )}
+
+        {viewMode === 'normal' && activeTab === 'eod' && (
           <section className="eod-section">
             <h2 className="section-title">Paid & Completed — End of Day</h2>
             <p className="section-hint">All orders that are paid and completed. Use this for EOD reconciliation.</p>
@@ -413,7 +560,70 @@ const Dashboard = () => {
             </div>
           </section>
         )}
+
+        {viewMode === 'kitchen' && (
+          <section className="kitchen-section">
+            <h2 className="section-title">Kitchen Mode</h2>
+            <p className="section-hint">
+              Pending and preparing orders only. Large cards, minimal controls for kitchen staff.
+            </p>
+            <div className="kitchen-orders">
+              {kitchenOrders.length === 0 ? (
+                <div className="empty-state">No pending or preparing orders.</div>
+              ) : (
+                kitchenOrders.map((order) => (
+                  <div key={order._id} className="kitchen-card">
+                    <div className="kitchen-header">
+                      <div>
+                        <h3>Order #{order.orderId}</h3>
+                        {order.tableNumber && (
+                          <p className="kitchen-table">Table: {order.tableNumber}</p>
+                        )}
+                      </div>
+                      <span
+                        className="status-badge"
+                        style={{ backgroundColor: getStatusColor(order.orderStatus) }}
+                      >
+                        {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
+                      </span>
+                    </div>
+                    <div className="kitchen-items">
+                      {order.items.map((item, index) => (
+                        <div key={index} className="kitchen-item">
+                          <span className="kitchen-item-name">{item.menuItem.name}</span>
+                          <span className="kitchen-item-qty">x {item.quantity}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="kitchen-actions">
+                      {order.orderStatus === 'pending' && (
+                        <button
+                          className="kitchen-btn start"
+                          onClick={() => updateOrderStatus(order._id, 'preparing')}
+                        >
+                          Start Preparing
+                        </button>
+                      )}
+                      {order.orderStatus === 'preparing' && (
+                        <button
+                          className="kitchen-btn ready"
+                          onClick={() => updateOrderStatus(order._id, 'ready')}
+                        >
+                          Mark as Ready
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        )}
       </div>
+
+      <button className="close-day-btn" onClick={handleCloseDay}>
+        Close Day
+      </button>
     </div>
   );
 };

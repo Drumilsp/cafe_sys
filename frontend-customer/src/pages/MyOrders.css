@@ -10,6 +10,60 @@
   margin-bottom: 2rem;
 }
 
+.status-progress {
+  display: flex;
+  align-items: center;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.status-step {
+  display: flex;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+
+.status-circle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  background-color: #fff;
+  z-index: 1;
+}
+
+.status-step.completed .status-circle {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.status-step.active .status-circle {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.status-label {
+  font-size: 0.75rem;
+  margin-left: 0.35rem;
+  color: #666;
+}
+
+.status-line {
+  flex: 1;
+  height: 2px;
+  background-color: #e0e0e0;
+  margin: 0 0.35rem;
+}
+
+.status-step.completed .status-line {
+  background-color: #28a745;
+}
+
+.status-step.active .status-label {
+  color: #007bff;
+  font-weight: 600;
+}
+
 .orders-header h1 {
   color: #333;
 }
@@ -94,6 +148,12 @@
 .payment-method {
   color: #666;
   font-size: 0.9rem;
+}
+
+.reorder-btn {
+  margin-left: auto;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
 }
 
 .loading {

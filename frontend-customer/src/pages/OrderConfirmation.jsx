@@ -25,6 +25,33 @@ const OrderConfirmation = () => {
     }
   };
 
+  const getStatusIndex = (status) => {
+    const order = ['pending', 'preparing', 'ready', 'completed'];
+    return order.indexOf(status);
+  };
+
+  const renderProgress = (status) => {
+    const steps = ['Pending', 'Preparing', 'Ready', 'Completed'];
+    const currentIndex = getStatusIndex(status);
+
+    return (
+      <div className="status-progress">
+        {steps.map((label, index) => {
+          const stepKey = label.toLowerCase();
+          const isCompleted = index < currentIndex;
+          const isActive = index === currentIndex;
+          return (
+            <div key={stepKey} className={`status-step ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}>
+              <div className="status-circle" />
+              <span className="status-label">{label}</span>
+              {index < steps.length - 1 && <div className="status-line" />}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   if (loading && !order) {
     return (
       <div className="confirmation-container">
@@ -70,6 +97,8 @@ const OrderConfirmation = () => {
               {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
             </span>
           </div>
+
+          {renderProgress(order.orderStatus)}
 
           <div className="order-details">
             <h2>Order Details</h2>

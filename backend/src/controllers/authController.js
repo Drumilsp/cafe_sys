@@ -165,6 +165,70 @@ exports.verifyOTP = async (req, res) => {
 };
 
 /**
+ * POST /api/auth/owner-login
+ * Owner login with admin ID (username) and password
+ * Body: { adminId, password }
+ */
+exports.ownerLogin = async (req, res) => {
+  try {
+    const { adminId, password } = req.body;
+
+    if (!adminId || !password) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Admin ID and password are required',
+      });
+    }
+
+    // Primary: login by username (admin ID)
+    let user = await User.findOne({ username: adminId, role: 'owner' }).select('+password');
+
+    // Fallback: allow phone-based login for backward compatibility
+    if (!user && /^[0-9]{10}$/.test(adminId)) {
+      user = await User.findOne({ phone: adminId, role: 'owner' }).select('+password');
+    }
+
+    if (!user) {
+      return res.status(401).json({
+        status: 'fail',
+        message: 'Invalid credentials',
+      });
+    }
+
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        status: 'fail',
+        message: 'Invalid credentials',
+      });
+    }
+
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Login successful',
+      data: {
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          phone: user.phone,
+          role: user.role,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Owner login error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Unable to login',
+    });
+  }
+};
+
+/**
  * GET /api/auth/me
  * Get current user info (protected route)
  */

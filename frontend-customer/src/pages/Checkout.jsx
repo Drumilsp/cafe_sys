@@ -7,6 +7,8 @@ import './Checkout.css';
 const Checkout = () => {
   const { cartItems, getTotalPrice, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState('counter');
+  const [serviceType, setServiceType] = useState('counter'); // 'counter' | 'table'
+  const [tableNumber, setTableNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -23,6 +25,12 @@ const Checkout = () => {
       return;
     }
 
+    if (serviceType === 'table' && !tableNumber.trim()) {
+      setError('Please enter your table number for table delivery.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const orderData = {
         items: cartItems.map((item) => {
@@ -35,6 +43,8 @@ const Checkout = () => {
           };
         }),
         paymentMethod,
+        serviceType,
+        ...(serviceType === 'table' ? { tableNumber: tableNumber.trim() } : {}),
       };
 
       console.log('Submitting order:', orderData);
@@ -100,6 +110,43 @@ const Checkout = () => {
                 <span>Pay Online (Mock)</span>
               </label>
             </div>
+          </div>
+
+          <div className="payment-section">
+            <h2>Delivery / Service</h2>
+            <div className="payment-options">
+              <label className="payment-option">
+                <input
+                  type="radio"
+                  name="serviceType"
+                  value="counter"
+                  checked={serviceType === 'counter'}
+                  onChange={(e) => setServiceType(e.target.value)}
+                />
+                <span>Pick up at Counter</span>
+              </label>
+              <label className="payment-option">
+                <input
+                  type="radio"
+                  name="serviceType"
+                  value="table"
+                  checked={serviceType === 'table'}
+                  onChange={(e) => setServiceType(e.target.value)}
+                />
+                <span>Table Delivery</span>
+              </label>
+            </div>
+            {serviceType === 'table' && (
+              <div className="form-group">
+                <label>Table Number</label>
+                <input
+                  type="text"
+                  value={tableNumber}
+                  onChange={(e) => setTableNumber(e.target.value)}
+                  placeholder="Enter your table number (e.g. 5 or A2)"
+                />
+              </div>
+            )}
           </div>
 
           {error && <div className="error">{error}</div>}

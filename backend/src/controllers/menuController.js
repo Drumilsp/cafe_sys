@@ -9,7 +9,7 @@ exports.listMenu = async (req, res) => {
   try {
     const filter = {};
     if (req.query.available === 'true') filter.available = true;
-    const items = await Menu.find(filter).sort({ createdAt: -1 });
+    const items = await Menu.find(filter).sort({ displayOrder: 1, createdAt: -1 });
     res.status(200).json({ status: 'ok', data: items });
   } catch (err) {
     console.error(err);
@@ -39,7 +39,19 @@ exports.getMenuItem = async (req, res) => {
 exports.createMenuItem = async (req, res) => {
   try {
     const { name, price, available, category, imageUrl } = req.body;
-    const item = await Menu.create({ name, price, available, category, imageUrl });
+
+    // Compute next display order so new items appear at the end by default
+    const lastItem = await Menu.findOne().sort({ displayOrder: -1 });
+    const nextDisplayOrder = (lastItem?.displayOrder || 0) + 1;
+
+    const item = await Menu.create({
+      name,
+      price,
+      available,
+      category,
+      imageUrl,
+      displayOrder: nextDisplayOrder,
+    });
     res.status(201).json({ status: 'created', data: item });
   } catch (err) {
     console.error(err);
@@ -95,5 +107,52 @@ exports.updateMenuItem = async (req, res) => {
       return res.status(400).json({ status: 'fail', errors: messages });
     }
     res.status(500).json({ status: 'error', message: 'Unable to update item' });
+  }
+};
+
+/**
+ * DELETE /api/menu/:id
+ * Delete menu item (owner)
+ */
+exports.deleteMenuItem = async (req, res) => {
+  try {
+    const item = await Menu.findByIdAndDelete(req.params.id);
+    if (!item) {
+      return res.status(404).json({ status: 'fail', message: 'Item not found' });
+    }
+    res.status(200).json({ status: 'ok', message: 'Item deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', message: 'Unable to delete item' });
+  }
+};
+
+/**
+ * PUT /api/menu/reorder
+ * Body: { ids: [menuItemId in desired order] }
+ */
+exports.reorderMenuItems = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ status: 'fail', message: 'ids must be a non-empty array' });
+    }
+
+    const bulkOps = ids.map((id, index) => ({
+      updateOne: {
+        filter: { _id: id },
+        update: { displayOrder: index + 1 },
+      },
+    }));
+
+    await Menu.bulkWrite(bulkOps);
+
+    const items = await Menu.find({ _id: { $in: ids } }).sort({ displayOrder: 1 });
+
+    res.status(200).json({ status: 'ok', data: items });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', message: 'Unable to reorder menu' });
   }
 };

@@ -33,6 +33,50 @@ const MenuManagement = () => {
     }
   };
 
+  const handleDelete = async (itemId) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this item?');
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`/api/menu/${itemId}`);
+      fetchMenu();
+    } catch (error) {
+      console.error('Failed to delete menu item:', error);
+      alert('Failed to delete menu item');
+    }
+  };
+
+  const handleReorder = async (newItems) => {
+    setMenuItems(newItems);
+    try {
+      await axios.put('/api/menu/reorder/all', {
+        ids: newItems.map((item) => item._id),
+      });
+    } catch (error) {
+      console.error('Failed to reorder items:', error);
+      alert('Failed to reorder items');
+      fetchMenu();
+    }
+  };
+
+  const onDragStart = (e, index) => {
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const onDrop = (e, index) => {
+    e.preventDefault();
+    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (Number.isNaN(fromIndex) || fromIndex === index) return;
+    const updated = [...menuItems];
+    const [moved] = updated.splice(fromIndex, 1);
+    updated.splice(index, 0, moved);
+    handleReorder(updated);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -187,6 +231,7 @@ const MenuManagement = () => {
             <table className="menu-table">
               <thead>
                 <tr>
+                  <th>Order</th>
                   <th>Name</th>
                   <th>Category</th>
                   <th>Price</th>
@@ -195,8 +240,18 @@ const MenuManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {menuItems.map((item) => (
-                  <tr key={item._id}>
+                {menuItems.map((item, index) => (
+                  <tr
+                    key={item._id}
+                    draggable
+                    onDragStart={(e) => onDragStart(e, index)}
+                    onDragOver={onDragOver}
+                    onDrop={(e) => onDrop(e, index)}
+                    className="draggable-row"
+                  >
+                    <td>
+                      <span className="drag-handle">⋮⋮</span>
+                    </td>
                     <td>{item.name}</td>
                     <td>{item.category}</td>
                     <td>₹{item.price}</td>
@@ -215,6 +270,13 @@ const MenuManagement = () => {
                         </button>
                         <button onClick={() => handleEdit(item)} className="edit-btn">
                           Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item._id)}
+                          className="delete-btn"
+                        >
+                          Delete
                         </button>
                       </div>
                     </td>

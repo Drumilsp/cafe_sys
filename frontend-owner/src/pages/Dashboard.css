@@ -313,6 +313,28 @@
   gap: 1.5rem;
 }
 
+.view-toggle {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.view-toggle button {
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  background-color: #f8f9fa;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.view-toggle button.active {
+  background-color: #343a40;
+  color: #fff;
+  border-color: #343a40;
+}
+
 .order-card {
   background: white;
   border: 1px solid #e0e0e0;
@@ -435,6 +457,109 @@
   text-align: center;
   padding: 3rem;
   color: #666;
+}
+
+.kitchen-section {
+  margin-top: 1.5rem;
+}
+
+.kitchen-orders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.kitchen-card {
+  background: #111;
+  color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.kitchen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.kitchen-header h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.25rem;
+}
+
+.kitchen-table {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffc107;
+}
+
+.kitchen-items {
+  margin-bottom: 1.25rem;
+}
+
+.kitchen-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  font-size: 1.1rem;
+}
+
+.kitchen-item-name {
+  font-weight: 500;
+}
+
+.kitchen-item-qty {
+  font-weight: 700;
+}
+
+.kitchen-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.kitchen-btn {
+  flex: 1;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.kitchen-btn.start {
+  background-color: #17a2b8;
+  color: #fff;
+}
+
+.kitchen-btn.ready {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.kitchen-btn:hover {
+  opacity: 0.9;
+}
+
+.close-day-btn {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  padding: 0.9rem 1.4rem;
+  border-radius: 999px;
+  background-color: #6c757d;
+  color: #fff;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.close-day-btn:hover {
+  background-color: #5a6268;
 }
 
 .loading {

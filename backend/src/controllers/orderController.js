@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Menu = require('../models/Menu');
+const User = require('../models/User');
 const { v4: uuidv4 } = require('uuid');
 
 /**
@@ -54,9 +55,69 @@ const generateOrderId = async () => {
 };
 
 /**
+ * Helper to validate items and compute totals
+ */
+const buildOrderItems = async (items) => {
+  let totalAmount = 0;
+  const orderItems = [];
+
+  for (const item of items) {
+    if (!item.menuItemId || !item.quantity || item.quantity < 1) {
+      const error = new Error('Each item must have menuItemId and quantity (min 1)');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const menuItem = await Menu.findById(item.menuItemId);
+    if (!menuItem) {
+      const error = new Error(`Menu item ${item.menuItemId} not found`);
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (!menuItem.available) {
+      const error = new Error(`Item "${menuItem.name}" is currently unavailable`);
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const itemTotal = menuItem.price * item.quantity;
+    totalAmount += itemTotal;
+
+    orderItems.push({
+      menuItem: menuItem._id,
+      quantity: item.quantity,
+      priceAtTime: menuItem.price,
+    });
+  }
+
+  return { totalAmount, orderItems };
+};
+
+/**
+ * Normalize and validate service type / table info
+ */
+const normalizeServiceDetails = (body) => {
+  const { serviceType, tableNumber } = body;
+  const allowed = ['counter', 'table'];
+  const finalServiceType = serviceType && allowed.includes(serviceType) ? serviceType : 'counter';
+
+  if (finalServiceType === 'table') {
+    if (!tableNumber || typeof tableNumber !== 'string' || !tableNumber.trim()) {
+      const error = new Error('Table number is required for table delivery');
+      error.statusCode = 400;
+      throw error;
+    }
+    return { serviceType: 'table', tableNumber: tableNumber.trim() };
+  }
+
+  return { serviceType: 'counter', tableNumber: null };
+};
+
+/**
  * POST /api/orders
  * Create a new order (Customer only)
- * Body: { items: [{ menuItemId, quantity }], paymentMethod }
+ * Body: { items: [{ menuItemId, quantity }], paymentMethod, serviceType?, tableNumber? }
  */
 exports.createOrder = async (req, res) => {
   try {
@@ -77,41 +138,31 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+    // Service / table info
+    let serviceDetails;
+    try {
+      serviceDetails = normalizeServiceDetails(req.body);
+    } catch (err) {
+      const statusCode = err.statusCode || 400;
+      return res.status(statusCode).json({
+        status: 'fail',
+        message: err.message,
+      });
+    }
+
     // Validate items and calculate total
     let totalAmount = 0;
-    const orderItems = [];
+    let orderItems = [];
 
-    for (const item of items) {
-      if (!item.menuItemId || !item.quantity || item.quantity < 1) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Each item must have menuItemId and quantity (min 1)',
-        });
-      }
-
-      // Fetch menu item
-      const menuItem = await Menu.findById(item.menuItemId);
-      if (!menuItem) {
-        return res.status(404).json({
-          status: 'fail',
-          message: `Menu item ${item.menuItemId} not found`,
-        });
-      }
-
-      if (!menuItem.available) {
-        return res.status(400).json({
-          status: 'fail',
-          message: `Item "${menuItem.name}" is currently unavailable`,
-        });
-      }
-
-      const itemTotal = menuItem.price * item.quantity;
-      totalAmount += itemTotal;
-
-      orderItems.push({
-        menuItem: menuItem._id,
-        quantity: item.quantity,
-        priceAtTime: menuItem.price,
+    try {
+      const result = await buildOrderItems(items);
+      totalAmount = result.totalAmount;
+      orderItems = result.orderItems;
+    } catch (err) {
+      const statusCode = err.statusCode || 400;
+      return res.status(statusCode).json({
+        status: 'fail',
+        message: err.message,
       });
     }
 
@@ -163,6 +214,8 @@ exports.createOrder = async (req, res) => {
           paymentMethod,
           paymentStatus: paymentMethod === 'online' ? 'paid' : 'pending',
           orderStatus: 'pending',
+          serviceType: serviceDetails.serviceType,
+          tableNumber: serviceDetails.tableNumber,
         });
         
         // Success - populate and return
@@ -234,6 +287,191 @@ exports.createOrder = async (req, res) => {
 };
 
 /**
+ * POST /api/orders/manual
+ * Create a new order manually (Owner only)
+ * Body: {
+ *   items: [{ menuItemId, quantity }],
+ *   paymentMethod,
+ *   customerName,
+ *   customerPhone,
+ *   serviceType?,
+ *   tableNumber?
+ * }
+ */
+exports.createManualOrder = async (req, res) => {
+  try {
+    const { items, paymentMethod, customerName, customerPhone } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Order must contain at least one item',
+      });
+    }
+
+    if (!paymentMethod || !['online', 'counter'].includes(paymentMethod)) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Payment method must be "online" or "counter"',
+      });
+    }
+
+    if (!customerName || !customerPhone) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Customer name and phone are required for manual orders',
+      });
+    }
+
+    if (!/^[0-9]{10}$/.test(customerPhone)) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Customer phone must be exactly 10 digits',
+      });
+    }
+
+    // Service / table info
+    let serviceDetails;
+    try {
+      serviceDetails = normalizeServiceDetails(req.body);
+    } catch (err) {
+      const statusCode = err.statusCode || 400;
+      return res.status(statusCode).json({
+        status: 'fail',
+        message: err.message,
+      });
+    }
+
+    // Find or create customer user
+    let customer = await User.findOne({ phone: customerPhone });
+    if (!customer) {
+      customer = await User.create({
+        name: customerName,
+        phone: customerPhone,
+        role: 'customer',
+      });
+    } else if (customer.name !== customerName) {
+      customer.name = customerName;
+      await customer.save();
+    }
+
+    // Validate items and calculate total
+    let totalAmount = 0;
+    let orderItems = [];
+
+    try {
+      const result = await buildOrderItems(items);
+      totalAmount = result.totalAmount;
+      orderItems = result.orderItems;
+    } catch (err) {
+      const statusCode = err.statusCode || 400;
+      return res.status(statusCode).json({
+        status: 'fail',
+        message: err.message,
+      });
+    }
+
+    // Generate unique order ID with daily reset counter (reuse same logic as createOrder)
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (attempts < maxAttempts) {
+      try {
+        const todayOrders = await Order.find({
+          createdAt: { $gte: todayStart, $lte: todayEnd },
+          orderId: { $regex: `^ORD-${dateStr}-\\d{4}$` },
+        })
+          .sort({ createdAt: -1 })
+          .limit(1);
+
+        let nextNumber = 1;
+        if (todayOrders.length > 0) {
+          const lastOrderId = todayOrders[0].orderId;
+          const match = lastOrderId.match(/-(\d{4})$/);
+          if (match) {
+            nextNumber = parseInt(match[1], 10) + 1;
+          }
+        }
+
+        nextNumber += attempts;
+
+        if (nextNumber > 9999) {
+          throw new Error('Maximum orders per day (9999) exceeded');
+        }
+
+        const orderId = `ORD-${dateStr}-${nextNumber.toString().padStart(4, '0')}`;
+
+        const order = await Order.create({
+          orderId,
+          customer: customer._id,
+          items: orderItems,
+          totalAmount,
+          paymentMethod,
+          paymentStatus: paymentMethod === 'online' ? 'paid' : 'pending',
+          orderStatus: 'pending',
+          serviceType: serviceDetails.serviceType,
+          tableNumber: serviceDetails.tableNumber,
+        });
+
+        await order.populate('items.menuItem', 'name price imageUrl');
+        await order.populate('customer', 'name phone');
+
+        return res.status(201).json({
+          status: 'success',
+          message: 'Manual order created successfully',
+          data: order,
+        });
+      } catch (error) {
+        const isDuplicateError =
+          error.code === 11000 ||
+          (error.name === 'MongoServerError' && error.code === 11000) ||
+          (error.message && error.message.includes('duplicate'));
+
+        if (isDuplicateError) {
+          attempts++;
+          if (attempts >= maxAttempts) {
+            console.error(
+              'Failed to generate unique order ID for manual order after',
+              maxAttempts,
+              'attempts. Last error:',
+              error.message
+            );
+            return res.status(500).json({
+              status: 'error',
+              message: 'Unable to generate unique order ID after multiple attempts. Please try again.',
+            });
+          }
+          const delay = Math.min(100 * Math.pow(2, attempts), 1000);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    return res.status(500).json({
+      status: 'error',
+      message: 'Failed to create manual order after multiple attempts',
+    });
+  } catch (error) {
+    console.error('Create manual order error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error.message || 'Unable to create manual order',
+      ...(process.env.NODE_ENV !== 'production' && { error: error.toString() }),
+    });
+  }
+};
+
+/**
  * GET /api/orders/my
  * Get current customer's orders (Customer only)
  */
@@ -291,6 +529,16 @@ exports.getAllOrders = async (req, res) => {
         { paymentMethod: { $ne: 'counter' } },
         { paymentStatus: 'paid' },
       ];
+    }
+
+    // Optional: limit to today's orders
+    if (req.query.todayOnly === '1' || req.query.todayOnly === 'true') {
+      const now = new Date();
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(now);
+      end.setHours(23, 59, 59, 999);
+      filter.createdAt = { $gte: start, $lte: end };
     }
 
     // Build sort object
@@ -444,6 +692,98 @@ exports.updateOrderPayment = async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Unable to update payment status',
+    });
+  }
+};
+
+/**
+ * PATCH /api/orders/:id/items/:itemId/prepared
+ * Update prepared state for a specific order item (Owner only)
+ * Body: { prepared: true/false }
+ */
+exports.updateOrderItemPrepared = async (req, res) => {
+  try {
+    const { id, itemId } = req.params;
+    const { prepared } = req.body;
+
+    if (typeof prepared !== 'boolean') {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'prepared must be boolean',
+      });
+    }
+
+    // Try to find by orderId first, then by MongoDB _id
+    let order = await Order.findOne({ orderId: id });
+    if (!order) {
+      order = await Order.findById(id);
+    }
+
+    if (!order) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Order not found',
+      });
+    }
+
+    const item = order.items.id(itemId);
+    if (!item) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Order item not found',
+      });
+    }
+
+    item.prepared = prepared;
+    await order.save();
+
+    await order.populate('customer', 'name phone');
+    await order.populate('items.menuItem', 'name price imageUrl');
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Order item updated',
+      data: order,
+    });
+  } catch (error) {
+    console.error('Update order item prepared error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Unable to update order item prepared state',
+    });
+  }
+};
+
+/**
+ * POST /api/orders/close-day
+ * Mark all today's pending & preparing orders as completed (Owner only)
+ */
+exports.closeDay = async (req, res) => {
+  try {
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+
+    const result = await Order.updateMany(
+      {
+        createdAt: { $gte: start, $lte: end },
+        orderStatus: { $in: ['pending', 'preparing'] },
+      },
+      { orderStatus: 'completed' }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Day closed. Pending and preparing orders marked as completed.',
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error('Close day error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Unable to close day',
     });
   }
 };

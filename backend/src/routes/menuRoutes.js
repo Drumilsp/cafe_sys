@@ -11,5 +11,7 @@ router.get('/:id', menuController.getMenuItem);
 router.post('/', authenticate, restrictToOwner, menuController.createMenuItem);
 router.put('/:id', authenticate, restrictToOwner, menuController.updateMenuItem);
 router.patch('/:id/availability', authenticate, restrictToOwner, menuController.toggleAvailability);
+router.delete('/:id', authenticate, restrictToOwner, menuController.deleteMenuItem);
+router.put('/reorder/all', authenticate, restrictToOwner, menuController.reorderMenuItems);
 
 module.exports = router;

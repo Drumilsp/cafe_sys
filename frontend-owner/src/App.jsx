@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MenuManagement from './pages/MenuManagement';
+import ManualOrder from './pages/ManualOrder';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -26,6 +27,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MenuManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manual-order"
+              element={
+                <ProtectedRoute>
+                  <ManualOrder />
                 </ProtectedRoute>
               }
             />

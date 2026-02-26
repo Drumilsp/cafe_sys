@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useCart } from '../context/CartContext';
 import './MyOrders.css';
 
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reorderError, setReorderError] = useState('');
+  const navigate = useNavigate();
+  const { addToCart, updateQuantity, clearCart } = useCart();
 
   useEffect(() => {
     fetchOrders();
@@ -34,6 +38,69 @@ const MyOrders = () => {
     return colors[status] || '#6c757d';
   };
 
+  const getStatusIndex = (status) => {
+    const order = ['pending', 'preparing', 'ready', 'completed'];
+    return order.indexOf(status);
+  };
+
+  const renderProgress = (status) => {
+    const steps = ['Pending', 'Preparing', 'Ready', 'Completed'];
+    const currentIndex = getStatusIndex(status);
+
+    return (
+      <div className="status-progress">
+        {steps.map((label, index) => {
+          const stepKey = label.toLowerCase();
+          const isCompleted = index < currentIndex;
+          const isActive = index === currentIndex;
+          return (
+            <div key={stepKey} className={`status-step ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}>
+              <div className="status-circle" />
+              <span className="status-label">{label}</span>
+              {index < steps.length - 1 && <div className="status-line" />}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const handleReorder = async (order) => {
+    try {
+      setReorderError('');
+      // Fetch current available menu
+      const res = await axios.get('/api/menu?available=true');
+      const available = res.data.data || [];
+      const menuMap = new Map(available.map((item) => [item._id, item]));
+
+      const unavailableNames = [];
+
+      clearCart();
+
+      order.items.forEach((orderItem) => {
+        const menuItemId = orderItem.menuItem._id || orderItem.menuItem;
+        const menuItem = menuMap.get(menuItemId);
+        if (!menuItem) {
+          unavailableNames.push(orderItem.menuItem.name);
+          return;
+        }
+        addToCart(menuItem);
+        updateQuantity(menuItem._id, orderItem.quantity);
+      });
+
+      if (unavailableNames.length > 0) {
+        setReorderError(
+          `Some items are no longer available and were skipped: ${unavailableNames.join(', ')}`
+        );
+      }
+
+      navigate('/cart');
+    } catch (error) {
+      console.error('Failed to reorder:', error);
+      setReorderError('Unable to reorder this order right now. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="orders-container">
@@ -49,6 +116,8 @@ const MyOrders = () => {
           <h1>My Orders</h1>
           <Link to="/menu" className="btn-secondary">Back to Menu</Link>
         </div>
+
+        {reorderError && <div className="error">{reorderError}</div>}
 
         {orders.length === 0 ? (
           <div className="empty-orders">
@@ -74,6 +143,8 @@ const MyOrders = () => {
                   </span>
                 </div>
 
+                {renderProgress(order.orderStatus)}
+
                 <div className="order-items">
                   {order.items.map((item, index) => (
                     <div key={index} className="order-item">
@@ -93,6 +164,13 @@ const MyOrders = () => {
                   <div className="payment-method">
                     {order.paymentMethod === 'online' ? 'Paid Online' : 'Pay at Counter'}
                   </div>
+                  <button
+                    type="button"
+                    className="btn-primary reorder-btn"
+                    onClick={() => handleReorder(order)}
+                  >
+                    Reorder
+                  </button>
                 </div>
               </div>
             ))}
