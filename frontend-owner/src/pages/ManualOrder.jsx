@@ -83,14 +83,14 @@ const ManualOrder = () => {
       return;
     }
 
-    if (!customerName.trim() || !customerPhone.trim()) {
-      setError('Customer name and phone are required.');
+    if (!customerName.trim()) {
+      setError('Customer name is required.');
       setSubmitting(false);
       return;
     }
 
-    if (!/^[0-9]{10}$/.test(customerPhone.trim())) {
-      setError('Customer phone must be exactly 10 digits.');
+    if (customerPhone.trim() && !/^[0-9]{10}$/.test(customerPhone.trim())) {
+      setError('Customer phone must be exactly 10 digits when provided.');
       setSubmitting(false);
       return;
     }
@@ -106,7 +106,7 @@ const ManualOrder = () => {
         items: itemsPayload,
         paymentMethod,
         customerName: customerName.trim(),
-        customerPhone: customerPhone.trim(),
+        ...(customerPhone.trim() ? { customerPhone: customerPhone.trim() } : {}),
         serviceType,
         ...(serviceType === 'table' ? { tableNumber: tableNumber.trim() } : {}),
       };
@@ -229,15 +229,14 @@ const ManualOrder = () => {
               />
             </div>
             <div className="form-group">
-              <label>Customer Phone</label>
+              <label>Customer Phone (optional)</label>
               <input
                 type="tel"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="10 digit phone number"
+                placeholder="10 digit phone number (optional)"
                 maxLength="10"
                 pattern="[0-9]{10}"
-                required
               />
             </div>
           </div>

@@ -131,10 +131,26 @@ const Dashboard = () => {
     return typeof item.prepared === 'boolean' ? item.prepared : false;
   };
 
-  const buildPrepItems = () => {
+  const toggleGroupPrepared = async (group, prepared) => {
+    try {
+      await Promise.all(
+        group.rows.map((row) =>
+          axios.patch(`/api/orders/${row.orderId}/items/${row.itemId}/prepared`, {
+            prepared,
+          })
+        )
+      );
+      fetchAllData();
+    } catch (error) {
+      console.error('Failed to update group prepared state:', error);
+      alert('Failed to update prepared state for this item group');
+    }
+  };
+
+  const buildPrepItems = (sourceOrders = orders) => {
     const map = new Map();
 
-    orders
+    sourceOrders
       .filter((order) => order.orderStatus !== 'completed')
       .forEach((order) => {
         order.items.forEach((item) => {
@@ -481,7 +497,18 @@ const Dashboard = () => {
                   <div key={group.menuItemId} className="order-card prep-card">
                     <div className="order-header">
                       <div>
-                        <h3>{group.name}</h3>
+                        <h3>
+                          <label className="order-item-label">
+                            <input
+                              type="checkbox"
+                              checked={group.rows.every((row) => row.prepared)}
+                              onChange={(e) =>
+                                toggleGroupPrepared(group, e.target.checked)
+                              }
+                            />
+                            <span>{group.name}</span>
+                          </label>
+                        </h3>
                         <p className="order-time">
                           Total to prepare: {group.totalQuantity}
                         </p>
@@ -590,7 +617,16 @@ const Dashboard = () => {
                     <div className="kitchen-items">
                       {order.items.map((item, index) => (
                         <div key={index} className="kitchen-item">
-                          <span className="kitchen-item-name">{item.menuItem.name}</span>
+                          <label className="order-item-label">
+                            <input
+                              type="checkbox"
+                              checked={getItemPrepared(item)}
+                              onChange={(e) =>
+                                toggleItemPrepared(order._id, item._id, e.target.checked)
+                              }
+                            />
+                            <span className="kitchen-item-name">{item.menuItem.name}</span>
+                          </label>
                           <span className="kitchen-item-qty">x {item.quantity}</span>
                         </div>
                       ))}
@@ -617,6 +653,63 @@ const Dashboard = () => {
                 ))
               )}
             </div>
+
+            {kitchenOrders.length > 0 && (
+              <section className="prep-section">
+                <h2 className="section-title">Items to Prepare (Kitchen View)</h2>
+                <p className="section-hint">
+                  Grouped by item for quick batching. Check off portions as they are prepared.
+                </p>
+                <div className="orders-list">
+                  {buildPrepItems(kitchenOrders).length === 0 ? (
+                    <div className="empty-state">No active items to prepare.</div>
+                  ) : (
+                    buildPrepItems(kitchenOrders).map((group) => (
+                      <div key={group.menuItemId} className="order-card prep-card">
+                        <div className="order-header">
+                          <div>
+                            <h3>
+                              <label className="order-item-label">
+                                <input
+                                  type="checkbox"
+                                  checked={group.rows.every((row) => row.prepared)}
+                                  onChange={(e) =>
+                                    toggleGroupPrepared(group, e.target.checked)
+                                  }
+                                />
+                                <span>{group.name}</span>
+                              </label>
+                            </h3>
+                            <p className="order-time">
+                              Total to prepare: {group.totalQuantity}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="order-items">
+                          {group.rows.map((row) => (
+                            <div key={row.itemId} className="order-item">
+                              <label className="order-item-label">
+                                <input
+                                  type="checkbox"
+                                  checked={row.prepared}
+                                  onChange={(e) =>
+                                    toggleItemPrepared(row.orderId, row.itemId, e.target.checked)
+                                  }
+                                />
+                                <span>
+                                  {row.quantity} for {row.customerName || 'Customer'} (Order{' '}
+                                  {row.orderDisplayId})
+                                </span>
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+            )}
           </section>
         )}
       </div>

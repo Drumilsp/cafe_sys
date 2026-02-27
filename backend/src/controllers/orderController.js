@@ -316,17 +316,17 @@ exports.createManualOrder = async (req, res) => {
       });
     }
 
-    if (!customerName || !customerPhone) {
+    if (!customerName) {
       return res.status(400).json({
         status: 'fail',
-        message: 'Customer name and phone are required for manual orders',
+        message: 'Customer name is required for manual orders',
       });
     }
 
-    if (!/^[0-9]{10}$/.test(customerPhone)) {
+    if (customerPhone && !/^[0-9]{10}$/.test(customerPhone)) {
       return res.status(400).json({
         status: 'fail',
-        message: 'Customer phone must be exactly 10 digits',
+        message: 'Customer phone must be exactly 10 digits when provided',
       });
     }
 
@@ -343,16 +343,30 @@ exports.createManualOrder = async (req, res) => {
     }
 
     // Find or create customer user
-    let customer = await User.findOne({ phone: customerPhone });
-    if (!customer) {
-      customer = await User.create({
-        name: customerName,
-        phone: customerPhone,
-        role: 'customer',
-      });
-    } else if (customer.name !== customerName) {
-      customer.name = customerName;
-      await customer.save();
+    let customer;
+    if (customerPhone) {
+      customer = await User.findOne({ phone: customerPhone });
+      if (!customer) {
+        customer = await User.create({
+          name: customerName,
+          phone: customerPhone,
+          role: 'customer',
+        });
+      } else if (customer.name !== customerName) {
+        customer.name = customerName;
+        await customer.save();
+      }
+    } else {
+      // Use a shared "walk-in" customer account when phone is not provided
+      const WALKIN_PHONE = '0000000000';
+      customer = await User.findOne({ phone: WALKIN_PHONE });
+      if (!customer) {
+        customer = await User.create({
+          name: 'Walk-in Customer',
+          phone: WALKIN_PHONE,
+          role: 'customer',
+        });
+      }
     }
 
     // Validate items and calculate total

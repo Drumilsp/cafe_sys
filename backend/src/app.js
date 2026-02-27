@@ -3,17 +3,32 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 
 const app = express();
 
 /* ===================== SECURITY HEADERS ===================== */
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 
 /* ===================== BODY PARSER ===================== */
 app.use(express.json({ limit: '10kb' }));
 
 /* ===================== CORS ===================== */
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  })
+);
+
+/* ===================== MONGO SANITIZE & XSS CLEAN ===================== */
+app.use(mongoSanitize());
+app.use(xss());
 
 /* ===================== LOGGING ===================== */
 if (process.env.NODE_ENV !== 'production') {
@@ -37,6 +52,14 @@ const apiLimiter = rateLimit({
 
 app.use('/api', apiLimiter);
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: 'Too many authentication attempts. Try again later.',
+});
+
+app.use('/api/auth', authLimiter);
+
 /* ===================== API ROUTES ===================== */
 const authRoutes = require('./routes/authRoutes');
 const menuRoutes = require('./routes/menuRoutes');
@@ -46,23 +69,25 @@ app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
 
-/* ===================== ROOT ===================== */
-app.get('/', (req, res) => {
-  res.json({ message: 'Cafe Ordering Backend Running' });
+/* ===================== 404 ===================== */
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
 });
 
 /* ===================== ERROR HANDLING ===================== */
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console.error(err);
+  }
+
   res.status(err.status || 500).json({
     status: 'error',
-    message: err.message || 'Internal server error',
+    message:
+      process.env.NODE_ENV === 'production'
+        ? 'Something went wrong'
+        : err.message,
   });
-});
-
-/* ===================== 404 ===================== */
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
 });
 
 module.exports = app;

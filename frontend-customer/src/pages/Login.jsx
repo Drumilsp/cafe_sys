@@ -100,13 +100,13 @@ const Login = () => {
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                placeholder="Enter 4-digit OTP"
-                maxLength="4"
+                placeholder="Enter 6-digit OTP"
+                maxLength="6"
                 required
               />
               {otpSent && (
                 <p className="otp-hint">
-                  OTP sent to {phone}. Use <strong>1234</strong> for testing.
+                  OTP sent to {phone}.
                 </p>
               )}
             </div>

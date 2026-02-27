@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { sendSms } = require('../services/smsService');
 
 /**
  * Generate JWT token
@@ -34,9 +35,8 @@ exports.requestOTP = async (req, res) => {
       });
     }
 
-    // Mock OTP: For MVP, use a simple 4-digit code (1234)
-    // In production, integrate with SMS service like Twilio
-    const mockOTP = '1234';
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Find or create user
@@ -46,7 +46,7 @@ exports.requestOTP = async (req, res) => {
       // Update existing user
       user.name = name;
       user.otp = {
-        code: mockOTP,
+        code: otp,
         expiresAt,
       };
       await user.save();
@@ -57,20 +57,30 @@ exports.requestOTP = async (req, res) => {
         phone,
         role: 'customer',
         otp: {
-          code: mockOTP,
+          code: otp,
           expiresAt,
         },
       });
     }
 
-    // In production, send OTP via SMS here
-    console.log(`OTP for ${phone}: ${mockOTP}`);
+    try {
+      await sendSms(
+        phone,
+        `Your OTP for Cafe login is ${otp}. Valid for 10 minutes.`
+      );
+    } catch (smsError) {
+      console.error('SMS send error:', smsError);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Unable to send OTP via SMS. Please try again later.',
+      });
+    }
 
     res.status(200).json({
       status: 'success',
       message: 'OTP sent successfully',
       // In development, return OTP for testing
-      ...(process.env.NODE_ENV !== 'production' && { otp: mockOTP }),
+      ...(process.env.NODE_ENV !== 'production' && { otp }),
     });
   } catch (error) {
     console.error('Request OTP error:', error);
