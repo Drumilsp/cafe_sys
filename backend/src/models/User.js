@@ -44,12 +44,8 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Index for faster phone lookups
-userSchema.index({ phone: 1 });
-
 // Index for role-based queries
 userSchema.index({ role: 1 });
-userSchema.index({ username: 1 }, { sparse: true });
 
 // Hash password when it is set/changed
 userSchema.pre('save', async function () {

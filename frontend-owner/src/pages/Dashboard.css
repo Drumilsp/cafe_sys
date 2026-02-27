@@ -313,6 +313,28 @@
   gap: 1.5rem;
 }
 
+.main-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+}
+
+.filters-toggle-btn {
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  background-color: #f8f9fa;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.filters-toggle-btn:hover {
+  background-color: #e9ecef;
+  border-color: #ccc;
+}
+
 .view-toggle {
   display: inline-flex;
   gap: 0.5rem;
@@ -549,7 +571,7 @@
   bottom: 1.5rem;
   padding: 0.9rem 1.4rem;
   border-radius: 999px;
-  background-color: #6c757d;
+  background-color: #dc3545;
   color: #fff;
   border: none;
   font-size: 0.95rem;
@@ -559,7 +581,7 @@
 }
 
 .close-day-btn:hover {
-  background-color: #5a6268;
+  background-color: #c82333;
 }
 
 .loading {

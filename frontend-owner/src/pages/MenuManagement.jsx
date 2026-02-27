@@ -7,6 +7,8 @@ import './MenuManagement.css';
 const MenuManagement = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tables, setTables] = useState([]);
+  const [tableName, setTableName] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
@@ -20,6 +22,7 @@ const MenuManagement = () => {
 
   useEffect(() => {
     fetchMenu();
+    fetchTables();
   }, []);
 
   const fetchMenu = async () => {
@@ -30,6 +33,15 @@ const MenuManagement = () => {
       console.error('Failed to fetch menu:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTables = async () => {
+    try {
+      const response = await axios.get('/api/tables');
+      setTables(response.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch tables:', error);
     }
   };
 
@@ -117,6 +129,31 @@ const MenuManagement = () => {
     }
   };
 
+  const handleAddTable = async (e) => {
+    e.preventDefault();
+    if (!tableName.trim()) return;
+    try {
+      await axios.post('/api/tables', { name: tableName.trim() });
+      setTableName('');
+      fetchTables();
+    } catch (error) {
+      console.error('Failed to add table:', error);
+      alert(error.response?.data?.message || 'Failed to add table');
+    }
+  };
+
+  const handleDeleteTable = async (id) => {
+    const confirmDelete = window.confirm('Delete this table?');
+    if (!confirmDelete) return;
+    try {
+      await axios.delete(`/api/tables/${id}`);
+      fetchTables();
+    } catch (error) {
+      console.error('Failed to delete table:', error);
+      alert('Failed to delete table');
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -154,6 +191,58 @@ const MenuManagement = () => {
           <button onClick={() => setShowForm(!showForm)} className="btn-primary">
             {showForm ? 'Cancel' : 'Add New Item'}
           </button>
+        </div>
+
+        <div className="tables-section">
+          <h2 className="section-title">Tables</h2>
+          <form onSubmit={handleAddTable} className="menu-form">
+            <div className="form-row">
+              <div className="form-group">
+                <label>Table Name / Number</label>
+                <input
+                  type="text"
+                  value={tableName}
+                  onChange={(e) => setTableName(e.target.value)}
+                  placeholder="e.g. 1, 2, A1"
+                />
+              </div>
+            </div>
+            <div className="form-actions">
+              <button type="submit" className="btn-primary">
+                Add Table
+              </button>
+            </div>
+          </form>
+          <div className="menu-list">
+            {tables.length === 0 ? (
+              <div className="empty-state">No tables configured yet.</div>
+            ) : (
+              <table className="menu-table">
+                <thead>
+                  <tr>
+                    <th>Table</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tables.map((table) => (
+                    <tr key={table._id}>
+                      <td>{table.name}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="delete-btn"
+                          onClick={() => handleDeleteTable(table._id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
 
         {showForm && (

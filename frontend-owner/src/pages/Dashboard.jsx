@@ -18,6 +18,7 @@ const Dashboard = () => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [markingPaidId, setMarkingPaidId] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
   const { user, logout } = useAuth();
 
   useEffect(() => {
@@ -58,7 +59,9 @@ const Dashboard = () => {
       }
 
       if (activeTab === 'eod') {
-        const eodRes = await axios.get('/api/orders?status=completed&paymentStatus=paid&sortBy=time&sortOrder=desc');
+        const eodRes = await axios.get(
+          '/api/orders?status=completed&paymentStatus=paid&sortBy=time&sortOrder=desc&todayOnly=1'
+        );
         setEodOrders(eodRes.data.data);
       }
     } catch (error) {
@@ -218,6 +221,7 @@ const Dashboard = () => {
             </button>
             <Link to="/menu" className="nav-link">Manage Menu</Link>
             <Link to="/manual-order" className="nav-link">Manual Order</Link>
+            <Link to="/history" className="nav-link">History</Link>
             <span className="user-name">Welcome, {user?.name}</span>
             <button onClick={logout} className="logout-btn">Logout</button>
           </div>
@@ -316,10 +320,21 @@ const Dashboard = () => {
         )}
 
         {viewMode === 'normal' && activeTab === 'active' && (
-          <h2 className="section-title main-list-title">Main Orders</h2>
+          <>
+            <div className="main-list-header">
+              <h2 className="section-title main-list-title">Main Orders</h2>
+              <button
+                type="button"
+                className="filters-toggle-btn"
+                onClick={() => setShowFilters((prev) => !prev)}
+              >
+                {showFilters ? 'Hide Filters & Sort' : 'Show Filters & Sort'}
+              </button>
+            </div>
+          </>
         )}
 
-        {viewMode === 'normal' && activeTab === 'active' && (
+        {viewMode === 'normal' && activeTab === 'active' && showFilters && (
         <div className="filters-section">
           <div className="filter-group">
             <label className="filter-label">Status:</label>

@@ -72,7 +72,6 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Indexes for faster queries
-orderSchema.index({ orderId: 1 });
 orderSchema.index({ customer: 1 });
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ orderStatus: 1 });

@@ -3,8 +3,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
 
 const app = express();
 
@@ -25,10 +23,6 @@ app.use(
     credentials: true,
   })
 );
-
-/* ===================== MONGO SANITIZE & XSS CLEAN ===================== */
-app.use(mongoSanitize());
-app.use(xss());
 
 /* ===================== LOGGING ===================== */
 if (process.env.NODE_ENV !== 'production') {
@@ -64,10 +58,12 @@ app.use('/api/auth', authLimiter);
 const authRoutes = require('./routes/authRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const tableRoutes = require('./routes/tableRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/tables', tableRoutes);
 
 /* ===================== 404 ===================== */
 app.use((req, res) => {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
@@ -12,6 +12,28 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const [tables, setTables] = useState([]);
+  const [tablesLoading, setTablesLoading] = useState(false);
+  const [tablesError, setTablesError] = useState('');
+
+  useEffect(() => {
+    const fetchTables = async () => {
+      setTablesLoading(true);
+      setTablesError('');
+      try {
+        const res = await axios.get('/api/tables');
+        setTables(res.data.data || []);
+      } catch (err) {
+        console.error('Failed to load tables:', err);
+        setTablesError('Unable to load tables. You can tell staff your table.');
+      } finally {
+        setTablesLoading(false);
+      }
+    };
+
+    fetchTables();
+  }, []);
 
   const handleCheckout = async (e) => {
     e.preventDefault();
@@ -139,12 +161,29 @@ const Checkout = () => {
             {serviceType === 'table' && (
               <div className="form-group">
                 <label>Table Number</label>
-                <input
-                  type="text"
-                  value={tableNumber}
-                  onChange={(e) => setTableNumber(e.target.value)}
-                  placeholder="Enter your table number (e.g. 5 or A2)"
-                />
+                {tablesLoading ? (
+                  <p className="section-hint">Loading tables...</p>
+                ) : tables.length > 0 ? (
+                  <select
+                    value={tableNumber}
+                    onChange={(e) => setTableNumber(e.target.value)}
+                  >
+                    <option value="">Select your table</option>
+                    {tables.map((table) => (
+                      <option key={table._id} value={table.name}>
+                        {table.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={tableNumber}
+                    onChange={(e) => setTableNumber(e.target.value)}
+                    placeholder="Enter your table number (e.g. 5 or A2)"
+                  />
+                )}
+                {tablesError && <p className="section-hint">{tablesError}</p>}
               </div>
             )}
           </div>

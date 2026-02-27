@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MenuManagement from './pages/MenuManagement';
 import ManualOrder from './pages/ManualOrder';
+import OrderHistory from './pages/OrderHistory';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -35,6 +36,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ManualOrder />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/history"
+              element={
+                <ProtectedRoute>
+                  <OrderHistory />
                 </ProtectedRoute>
               }
             />
