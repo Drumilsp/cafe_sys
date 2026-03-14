@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import './Menu.css';
+import logo from "../assets/logo.png";
 
 const Menu = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -99,30 +100,39 @@ const Menu = () => {
     <div className="menu-container">
       <header className="menu-header">
         <div className="header-content">
-          <h1>Cafe Menu</h1>
-          <div className="header-actions">
-            {user && (
-              <Link to="/my-orders" className="orders-link">
-                My Orders
-              </Link>
-            )}
-            <Link to="/cart" className={`cart-link ${getTotalItems() > 0 ? 'has-items' : ''}`}>
-              <span className="cart-icon">🛒</span>
-              <span className="cart-text">Cart</span>
-              {getTotalItems() > 0 && (
-                <span className="cart-badge animate-bounce">{getTotalItems()}</span>
+          <div className="header-left">
+            <div className="brand-text">
+              <span className="brand-name">Cafe Saarchi</span>
+            </div>
+            <div className="header-actions">
+              {user && (
+                <Link to="/my-orders" className="orders-link">
+                  My Orders
+                </Link>
               )}
-            </Link>
-            {!user && (
-              <button onClick={() => navigate('/login')} className="login-btn">
-                Login
-              </button>
-            )}
+              <Link to="/cart" className={`cart-link ${getTotalItems() > 0 ? 'has-items' : ''}`}>
+                <span className="cart-icon">🛒</span>
+                <span className="cart-text">Cart</span>
+                {getTotalItems() > 0 && (
+                  <span className="cart-badge animate-bounce">{getTotalItems()}</span>
+                )}
+              </Link>
+              {!user && (
+                <button onClick={() => navigate('/login')} className="login-btn">
+                  Login
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="header-logo">
+            <div className="logo-mark" aria-hidden="true">
+              <img className="logo" src={logo} alt="logo"/>
+            </div>
           </div>
         </div>
-        {user && <p className="welcome-text">Welcome, {user.name}!</p>}
+        
       </header>
-
+      {user && <p className="welcome-text">Welcome, {user.name}!</p>}
       <div className="container">
         <div className="category-filter">
           {categories.map((category) => (
