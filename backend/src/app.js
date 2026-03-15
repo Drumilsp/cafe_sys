@@ -17,9 +17,21 @@ app.use(
 app.use(express.json({ limit: '10kb' }));
 
 /* ===================== CORS ===================== */
+const allowedOrigins = [];
+
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
+if (process.env.CORS_ORIGINS) {
+  allowedOrigins.push(
+    ...process.env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+  );
+}
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: allowedOrigins.length > 0 ? allowedOrigins : undefined,
     credentials: true,
   })
 );
