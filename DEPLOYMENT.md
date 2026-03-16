@@ -132,6 +132,8 @@ In Render Static Site settings, set:
 
 ```bash
 VITE_API_URL=https://your-backend-service.onrender.com
+VITE_UPI_ID=cafe@upi
+VITE_CAFE_NAME=Cafe%20Saarchi
 ```
 
 ### Build & publish

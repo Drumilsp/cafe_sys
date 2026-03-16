@@ -3,6 +3,21 @@ const Menu = require('../models/Menu');
 const User = require('../models/User');
 const { v4: uuidv4 } = require('uuid');
 
+const normalizeStatusValue = (status) => {
+  if (status === 'completed') return 'delivered';
+  return status;
+};
+
+const normalizeOrderForResponse = (order) => {
+  if (!order) return order;
+  const current = order.orderStatus;
+  const next = normalizeStatusValue(current);
+  if (next !== current) {
+    order.orderStatus = next;
+  }
+  return order;
+};
+
 /**
  * Generate unique order ID with daily reset counter (e.g., ORD-20240216-0001)
  */
@@ -212,8 +227,8 @@ exports.createOrder = async (req, res) => {
           items: orderItems,
           totalAmount,
           paymentMethod,
-          paymentStatus: paymentMethod === 'online' ? 'paid' : 'pending',
-          orderStatus: 'pending',
+          paymentStatus: 'pending',
+          orderStatus: paymentMethod === 'online' ? 'pending' : 'pending',
           serviceType: serviceDetails.serviceType,
           tableNumber: serviceDetails.tableNumber,
         });
@@ -428,7 +443,7 @@ exports.createManualOrder = async (req, res) => {
           items: orderItems,
           totalAmount,
           paymentMethod,
-          paymentStatus: paymentMethod === 'online' ? 'paid' : 'pending',
+          paymentStatus: 'pending',
           orderStatus: 'pending',
           serviceType: serviceDetails.serviceType,
           tableNumber: serviceDetails.tableNumber,
@@ -494,6 +509,7 @@ exports.getMyOrders = async (req, res) => {
     const orders = await Order.find({ customer: req.user._id })
       .populate('items.menuItem', 'name price imageUrl')
       .sort({ createdAt: -1 });
+    orders.forEach(normalizeOrderForResponse);
 
     res.status(200).json({
       status: 'success',
@@ -512,7 +528,7 @@ exports.getMyOrders = async (req, res) => {
  * GET /api/orders
  * Get all orders (Owner only)
  * Query params: 
- *   ?status=pending|preparing|ready|completed
+ *   ?status=pending|verifying_payment|preparing|ready|delivered
  *   ?paymentMethod=online|counter
  *   ?paymentStatus=pending|paid
  *   ?sortBy=time|price|volume (default: time)
@@ -524,7 +540,7 @@ exports.getAllOrders = async (req, res) => {
     
     // Filter by status
     if (req.query.status) {
-      filter.orderStatus = req.query.status;
+      filter.orderStatus = normalizeStatusValue(req.query.status);
     }
     
     // Filter by payment method
@@ -582,6 +598,7 @@ exports.getAllOrders = async (req, res) => {
       .populate('items.menuItem', 'name price imageUrl')
       .sort(sortObject)
       .lean(); // Use lean() for better performance
+    orders = orders.map(normalizeOrderForResponse);
 
     // If sorting by volume, calculate item count and sort in memory
     if (needsInMemorySort) {
@@ -612,15 +629,16 @@ exports.getAllOrders = async (req, res) => {
 /**
  * PATCH /api/orders/:id/status
  * Update order status (Owner only)
- * Body: { orderStatus: 'pending'|'preparing'|'ready'|'completed' }
+ * Body: { orderStatus: 'pending'|'verifying_payment'|'preparing'|'ready'|'delivered' }
  */
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { orderStatus } = req.body;
 
-    const validStatuses = ['pending', 'preparing', 'ready', 'completed'];
-    if (!orderStatus || !validStatuses.includes(orderStatus)) {
+    const validStatuses = ['pending', 'verifying_payment', 'preparing', 'ready', 'delivered'];
+    const normalizedRequested = normalizeStatusValue(orderStatus);
+    if (!orderStatus || !validStatuses.includes(normalizedRequested)) {
       return res.status(400).json({
         status: 'fail',
         message: `orderStatus must be one of: ${validStatuses.join(', ')}`,
@@ -641,13 +659,14 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     // Update order status
-    order.orderStatus = orderStatus;
+    order.orderStatus = normalizedRequested;
     await order.save();
 
     // Populate and return
     await order.populate('customer', 'name phone');
     await order.populate('items.menuItem', 'name price imageUrl');
 
+    normalizeOrderForResponse(order);
     res.status(200).json({
       status: 'success',
       message: 'Order status updated',
@@ -691,11 +710,16 @@ exports.updateOrderPayment = async (req, res) => {
     }
 
     order.paymentStatus = 'paid';
+    // When owner marks Paid, order should move to Preparing immediately
+    if (order.orderStatus === 'pending') {
+      order.orderStatus = 'preparing';
+    }
     await order.save();
 
     await order.populate('customer', 'name phone');
     await order.populate('items.menuItem', 'name price imageUrl');
 
+    normalizeOrderForResponse(order);
     res.status(200).json({
       status: 'success',
       message: 'Payment marked as received',
@@ -753,6 +777,7 @@ exports.updateOrderItemPrepared = async (req, res) => {
 
     await order.populate('customer', 'name phone');
     await order.populate('items.menuItem', 'name price imageUrl');
+    normalizeOrderForResponse(order);
 
     res.status(200).json({
       status: 'success',
@@ -769,35 +794,60 @@ exports.updateOrderItemPrepared = async (req, res) => {
 };
 
 /**
- * POST /api/orders/close-day
- * Mark all today's pending & preparing orders as completed (Owner only)
+ * PATCH /api/orders/:id/customer-paid
+ * Customer indicates they have paid via UPI (online payment).
+ * Sets orderStatus to verifying_payment and paymentStatus to paid.
  */
-exports.closeDay = async (req, res) => {
+exports.customerMarkedPaid = async (req, res) => {
   try {
-    const now = new Date();
-    const start = new Date(now);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(now);
-    end.setHours(23, 59, 59, 999);
+    const { id } = req.params;
 
-    const result = await Order.updateMany(
-      {
-        createdAt: { $gte: start, $lte: end },
-        orderStatus: { $in: ['pending', 'preparing'] },
-      },
-      { orderStatus: 'completed' }
-    );
+    // Try to find by orderId first, then by MongoDB _id
+    let order = await Order.findOne({ orderId: id });
+    if (!order) {
+      order = await Order.findById(id);
+    }
 
-    res.status(200).json({
+    if (!order) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Order not found',
+      });
+    }
+
+    // Customer can only mark their own order as paid
+    if (order.customer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'Access denied',
+      });
+    }
+
+    if (order.paymentMethod !== 'online') {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'This order is not an online payment order',
+      });
+    }
+
+    order.paymentStatus = 'paid';
+    order.orderStatus = 'verifying_payment';
+    await order.save();
+
+    await order.populate('customer', 'name phone');
+    await order.populate('items.menuItem', 'name price imageUrl');
+    normalizeOrderForResponse(order);
+
+    return res.status(200).json({
       status: 'success',
-      message: 'Day closed. Pending and preparing orders marked as completed.',
-      modifiedCount: result.modifiedCount,
+      message: 'Payment submitted for verification',
+      data: order,
     });
   } catch (error) {
-    console.error('Close day error:', error);
-    res.status(500).json({
+    console.error('Customer marked paid error:', error);
+    return res.status(500).json({
       status: 'error',
-      message: 'Unable to close day',
+      message: 'Unable to update payment status',
     });
   }
 };
@@ -837,6 +887,7 @@ exports.getOrderById = async (req, res) => {
       });
     }
 
+    normalizeOrderForResponse(order);
     res.status(200).json({
       status: 'success',
       data: order,

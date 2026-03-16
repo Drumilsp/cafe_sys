@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { sendSms } = require('../services/smsService');
+const { sendOtp } = require('../services/otpService');
 
 /**
  * Generate JWT token
@@ -64,10 +64,14 @@ exports.requestOTP = async (req, res) => {
     }
 
     try {
-      await sendSms(
-        phone,
-        `Your OTP for Cafe login is ${otp}. Valid for 10 minutes.`
-      );
+      const result = await sendOtp({ phone, otp });
+
+      res.status(200).json({
+        status: 'success',
+        message: 'OTP generated',
+        ...(result.otp ? { otp: result.otp } : {}),
+      });
+      return;
     } catch (smsError) {
       console.error('SMS send error:', smsError);
       return res.status(500).json({
@@ -75,13 +79,6 @@ exports.requestOTP = async (req, res) => {
         message: 'Unable to send OTP via SMS. Please try again later.',
       });
     }
-
-    res.status(200).json({
-      status: 'success',
-      message: 'OTP sent successfully',
-      // In development, return OTP for testing
-      ...(process.env.NODE_ENV !== 'production' && { otp }),
-    });
   } catch (error) {
     console.error('Request OTP error:', error);
     if (error.code === 11000) {

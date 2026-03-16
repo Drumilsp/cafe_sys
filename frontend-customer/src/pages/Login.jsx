@@ -22,9 +22,12 @@ const Login = () => {
     setError('');
 
     try {
-      await axios.post('/api/auth/request-otp', { name, phone });
+      const res = await axios.post('/api/auth/request-otp', { name, phone });
       setOtpSent(true);
       setStep('verify');
+      if (res.data?.otp) {
+        setOtp(res.data.otp);
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send OTP');
     } finally {
@@ -106,7 +109,7 @@ const Login = () => {
               />
               {otpSent && (
                 <p className="otp-hint">
-                  OTP sent to {phone}.
+                  {otp ? `OTP: ${otp}` : `OTP sent to ${phone}.`}
                 </p>
               )}
             </div>

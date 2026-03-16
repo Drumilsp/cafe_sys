@@ -189,23 +189,6 @@
   margin-top: 2rem;
 }
 
-.eod-section {
-  margin: 1.5rem 0;
-  padding: 1.5rem;
-  background-color: #f0f8f5;
-  border: 1px solid #28a745;
-  border-radius: 12px;
-}
-
-.eod-section .section-title {
-  color: #155724;
-}
-
-.order-card.eod-card {
-  border-left: 4px solid #28a745;
-  background: #fff;
-}
-
 .filters-section {
   margin: 2rem 0;
   padding: 1.5rem;
@@ -492,11 +475,12 @@
 }
 
 .kitchen-card {
-  background: #111;
-  color: #f8f9fa;
+  background: white;
+  color: #333;
   padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .kitchen-header {
@@ -512,7 +496,7 @@
 }
 
 .kitchen-table {
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: #ffc107;
 }
@@ -563,25 +547,6 @@
 
 .kitchen-btn:hover {
   opacity: 0.9;
-}
-
-.close-day-btn {
-  position: fixed;
-  right: 1.5rem;
-  bottom: 1.5rem;
-  padding: 0.9rem 1.4rem;
-  border-radius: 999px;
-  background-color: #dc3545;
-  color: #fff;
-  border: none;
-  font-size: 0.95rem;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  cursor: pointer;
-}
-
-.close-day-btn:hover {
-  background-color: #c82333;
 }
 
 .loading {

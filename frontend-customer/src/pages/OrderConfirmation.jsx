@@ -26,12 +26,23 @@ const OrderConfirmation = () => {
   };
 
   const getStatusIndex = (status) => {
-    const order = ['pending', 'preparing', 'ready', 'completed'];
+    const order = ['pending', 'verifying_payment', 'preparing', 'ready', 'delivered'];
     return order.indexOf(status);
   };
 
+  const getStatusLabel = (status) => {
+    const map = {
+      pending: 'Pending',
+      verifying_payment: 'Verifying Payment',
+      preparing: 'Preparing',
+      ready: 'Ready',
+      delivered: 'Delivered',
+    };
+    return map[status] || status;
+  };
+
   const renderProgress = (status) => {
-    const steps = ['Pending', 'Preparing', 'Ready', 'Completed'];
+    const steps = ['Pending', 'Verifying Payment', 'Preparing', 'Ready', 'Delivered'];
     const currentIndex = getStatusIndex(status);
 
     return (
@@ -72,9 +83,10 @@ const OrderConfirmation = () => {
   const getStatusColor = (status) => {
     const colors = {
       pending: '#ffc107',
+      verifying_payment: '#6f42c1',
       preparing: '#17a2b8',
       ready: '#28a745',
-      completed: '#6c757d',
+      delivered: '#6c757d',
     };
     return colors[status] || '#6c757d';
   };
@@ -84,7 +96,7 @@ const OrderConfirmation = () => {
       <div className="container">
         <div className="confirmation-card">
           <div className="success-icon">✓</div>
-          <h1>Order Placed Successfully!</h1>
+          <h1>Order Confirmed</h1>
           <div className="order-id">
             <strong>Order ID:</strong> {order.orderId}
           </div>
@@ -94,7 +106,7 @@ const OrderConfirmation = () => {
               className="status-badge"
               style={{ backgroundColor: getStatusColor(order.orderStatus) }}
             >
-              {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
+              {getStatusLabel(order.orderStatus)}
             </span>
           </div>
 

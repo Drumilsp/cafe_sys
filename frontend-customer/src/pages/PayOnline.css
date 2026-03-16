@@ -1,0 +1,104 @@
+.payonline-container {
+  min-height: 100vh;
+  padding: 1.75rem 0 2.5rem;
+}
+
+.payonline-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  padding: 1.5rem 1.25rem;
+}
+
+.payonline-card h1 {
+  font-size: 1.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.payonline-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.payonline-details {
+  background-color: #fffdf3;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 0.9rem 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  gap: 1rem;
+}
+
+.detail-row .label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.detail-row .value {
+  font-weight: 600;
+}
+
+.detail-row.total .value {
+  font-size: 1.05rem;
+}
+
+.payonline-items {
+  margin-bottom: 1.25rem;
+}
+
+.payonline-items h2 {
+  font-size: 0.95rem;
+  margin-bottom: 0.6rem;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.payonline-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.payonline-actions .btn-primary,
+.payonline-actions .btn-secondary {
+  flex: 1;
+}
+
+.payonline-qr h2 {
+  font-size: 0.95rem;
+  margin-bottom: 0.6rem;
+}
+
+.qr-img {
+  width: 220px;
+  height: 220px;
+  border-radius: 16px;
+  border: 2px solid #000;
+  background: #fff;
+}
+
+@media (max-width: 480px) {
+  .payonline-actions {
+    flex-direction: column;
+  }
+
+  .qr-img {
+    width: 200px;
+    height: 200px;
+  }
+}
+

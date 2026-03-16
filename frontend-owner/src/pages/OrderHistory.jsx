@@ -39,9 +39,10 @@ const OrderHistory = () => {
   const getStatusColor = (status) => {
     const colors = {
       pending: '#ffc107',
+      verifying_payment: '#6f42c1',
       preparing: '#17a2b8',
       ready: '#28a745',
-      completed: '#6c757d',
+      delivered: '#6c757d',
     };
     return colors[status] || '#6c757d';
   };

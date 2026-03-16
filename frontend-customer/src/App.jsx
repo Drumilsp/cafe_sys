@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Menu from './pages/Menu';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import PayOnline from './pages/PayOnline';
 import OrderConfirmation from './pages/OrderConfirmation';
 import MyOrders from './pages/MyOrders';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -33,6 +34,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <OrderConfirmation />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pay-online/:orderId"
+                element={
+                  <ProtectedRoute>
+                    <PayOnline />
                   </ProtectedRoute>
                 }
               />

@@ -7,8 +7,7 @@ import './Dashboard.css';
 const Dashboard = () => {
   const [orders, setOrders] = useState([]);
   const [payAtCounterOrders, setPayAtCounterOrders] = useState([]);
-  const [eodOrders, setEodOrders] = useState([]);
-  const [activeTab, setActiveTab] = useState('active'); // 'active' | 'eod' | 'prep'
+  const [activeTab, setActiveTab] = useState('active'); // 'active' | 'prep'
   const [viewMode, setViewMode] = useState('normal'); // 'normal' | 'kitchen'
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
@@ -58,12 +57,6 @@ const Dashboard = () => {
         setOrders(res.data.data);
       }
 
-      if (activeTab === 'eod') {
-        const eodRes = await axios.get(
-          '/api/orders?status=completed&paymentStatus=paid&sortBy=time&sortOrder=desc&todayOnly=1'
-        );
-        setEodOrders(eodRes.data.data);
-      }
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     } finally {
@@ -104,9 +97,10 @@ const Dashboard = () => {
   const getStatusColor = (status) => {
     const colors = {
       pending: '#ffc107',
+      verifying_payment: '#6f42c1',
       preparing: '#17a2b8',
       ready: '#28a745',
-      completed: '#6c757d',
+      delivered: '#6c757d',
     };
     return colors[status] || '#6c757d';
   };
@@ -114,8 +108,9 @@ const Dashboard = () => {
   const getNextStatus = (currentStatus) => {
     const statusFlow = {
       pending: 'preparing',
+      verifying_payment: 'preparing',
       preparing: 'ready',
-      ready: 'completed',
+      ready: 'delivered',
     };
     return statusFlow[currentStatus];
   };
@@ -154,7 +149,7 @@ const Dashboard = () => {
     const map = new Map();
 
     sourceOrders
-      .filter((order) => order.orderStatus !== 'completed')
+      .filter((order) => order.orderStatus !== 'delivered')
       .forEach((order) => {
         order.items.forEach((item) => {
           if (!item.menuItem) return;
@@ -185,21 +180,11 @@ const Dashboard = () => {
     return Array.from(map.values());
   };
 
-  const handleCloseDay = async () => {
-    const confirmed = window.confirm('Close day? This will mark all pending and preparing orders today as completed.');
-    if (!confirmed) return;
-    try {
-      await axios.post('/api/orders/close-day');
-      fetchAllData();
-      alert('Day closed. Pending and preparing orders were marked as completed.');
-    } catch (error) {
-      console.error('Failed to close day:', error);
-      alert('Failed to close day');
-    }
-  };
-
   const kitchenOrders = orders.filter(
-    (order) => order.orderStatus === 'pending' || order.orderStatus === 'preparing'
+    (order) =>
+      order.orderStatus === 'pending' ||
+      order.orderStatus === 'verifying_payment' ||
+      order.orderStatus === 'preparing'
   );
 
   if (loading && isInitialLoad) {
@@ -251,12 +236,6 @@ const Dashboard = () => {
             className={activeTab === 'active' ? 'active' : ''}
           >
             Active Orders
-          </button>
-          <button
-            onClick={() => setActiveTab('eod')}
-            className={activeTab === 'eod' ? 'active' : ''}
-          >
-            Paid & Completed (EOD)
           </button>
           <button
             onClick={() => setActiveTab('prep')}
@@ -364,10 +343,16 @@ const Dashboard = () => {
                 Ready
               </button>
               <button
-                onClick={() => setStatusFilter('completed')}
-                className={statusFilter === 'completed' ? 'active' : ''}
+                onClick={() => setStatusFilter('verifying_payment')}
+                className={statusFilter === 'verifying_payment' ? 'active' : ''}
               >
-                Completed
+                Verifying Payment
+              </button>
+              <button
+                onClick={() => setStatusFilter('delivered')}
+                className={statusFilter === 'delivered' ? 'active' : ''}
+              >
+                Delivered
               </button>
             </div>
           </div>
@@ -482,7 +467,18 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                {order.orderStatus !== 'completed' && (
+                {order.orderStatus === 'verifying_payment' && (
+                  <div className="order-actions">
+                    <button
+                      onClick={() => updateOrderStatus(order._id, 'preparing')}
+                      className="status-btn"
+                    >
+                      Verify Payment
+                    </button>
+                  </div>
+                )}
+
+                {order.orderStatus !== 'delivered' && order.orderStatus !== 'verifying_payment' && (
                   <div className="order-actions">
                     <button
                       onClick={() => updateOrderStatus(order._id, getNextStatus(order.orderStatus))}
@@ -555,53 +551,6 @@ const Dashboard = () => {
           </section>
         )}
 
-        {viewMode === 'normal' && activeTab === 'eod' && (
-          <section className="eod-section">
-            <h2 className="section-title">Paid & Completed — End of Day</h2>
-            <p className="section-hint">All orders that are paid and completed. Use this for EOD reconciliation.</p>
-            <div className="orders-list">
-              {eodOrders.length === 0 ? (
-                <div className="empty-state">No paid & completed orders yet.</div>
-              ) : (
-                eodOrders.map((order) => (
-                  <div key={order._id} className="order-card eod-card">
-                    <div className="order-header">
-                      <div>
-                        <h3>Order #{order.orderId}</h3>
-                        <p className="customer-info">
-                          {order.customer.name} — {order.customer.phone}
-                        </p>
-                        <p className="order-time">
-                          {new Date(order.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                      <span className="status-badge" style={{ backgroundColor: getStatusColor(order.orderStatus) }}>
-                        {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
-                      </span>
-                    </div>
-                    <div className="order-items">
-                      {order.items.map((item, index) => (
-                        <div key={index} className="order-item">
-                          <span>{item.menuItem.name} x {item.quantity}</span>
-                          <span>₹{item.priceAtTime * item.quantity}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="order-footer">
-                      <div className="order-total">
-                        <span>Total:</span>
-                        <span>₹{order.totalAmount}</span>
-                      </div>
-                      <div className="payment-info">
-                        <span>{order.paymentMethod === 'online' ? 'Online' : 'Counter'} — Paid</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
-        )}
 
         {viewMode === 'kitchen' && (
           <section className="kitchen-section">
@@ -647,6 +596,14 @@ const Dashboard = () => {
                       ))}
                     </div>
                     <div className="kitchen-actions">
+                      {order.orderStatus === 'verifying_payment' && (
+                        <button
+                          className="kitchen-btn start"
+                          onClick={() => updateOrderStatus(order._id, 'preparing')}
+                        >
+                          Verify Payment
+                        </button>
+                      )}
                       {order.orderStatus === 'pending' && (
                         <button
                           className="kitchen-btn start"
@@ -661,6 +618,14 @@ const Dashboard = () => {
                           onClick={() => updateOrderStatus(order._id, 'ready')}
                         >
                           Mark as Ready
+                        </button>
+                      )}
+                      {order.orderStatus === 'ready' && (
+                        <button
+                          className="kitchen-btn ready"
+                          onClick={() => updateOrderStatus(order._id, 'delivered')}
+                        >
+                          Mark as Delivered
                         </button>
                       )}
                     </div>
@@ -729,9 +694,6 @@ const Dashboard = () => {
         )}
       </div>
 
-      <button className="close-day-btn" onClick={handleCloseDay}>
-        Close Day
-      </button>
     </div>
   );
 };

@@ -72,7 +72,12 @@ const Checkout = () => {
       console.log('Submitting order:', orderData);
       const response = await axios.post('/api/orders', orderData);
       clearCart();
-      navigate(`/order-confirmation/${response.data.data.orderId}`);
+      const created = response.data.data;
+      if (paymentMethod === 'online') {
+        navigate(`/pay-online/${created.orderId}`);
+      } else {
+        navigate(`/order-confirmation/${created.orderId}`);
+      }
     } catch (err) {
       console.error('Checkout error:', err);
       const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to place order';
