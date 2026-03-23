@@ -82,7 +82,8 @@
 }
 .orders-link,
 .cart-link,
-.login-btn {
+.login-btn,
+.logout-btn {
   padding: 0.5rem 1rem;
   border-radius: 999px;
   border: 1px solid #000000;
@@ -93,6 +94,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+.logout-btn {
+  background-color: #111111;
+  color: #fffdf3;
 }
 .cart-icon {
   font-size: 0.95rem;

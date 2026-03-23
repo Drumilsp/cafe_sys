@@ -14,9 +14,15 @@ const Menu = () => {
   const [loading, setLoading] = useState(true);
   const [addedItems, setAddedItems] = useState(new Set());
   const [animatingItem, setAnimatingItem] = useState(null);
-  const { addToCart, updateQuantity, getTotalItems, cartItems } = useCart();
-  const { user } = useAuth();
+  const { addToCart, updateQuantity, getTotalItems, cartItems, clearCart } = useCart();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    clearCart();
+    logout();
+    navigate('/login');
+  };
 
   useEffect(() => {
     fetchMenu();
@@ -117,9 +123,13 @@ const Menu = () => {
                   <span className="cart-badge animate-bounce">{getTotalItems()}</span>
                 )}
               </Link>
-              {!user && (
+              {!user ? (
                 <button onClick={() => navigate('/login')} className="login-btn">
                   Login
+                </button>
+              ) : (
+                <button onClick={handleLogout} className="logout-btn">
+                  Logout
                 </button>
               )}
             </div>

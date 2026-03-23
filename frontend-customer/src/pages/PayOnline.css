@@ -21,11 +21,12 @@
   margin-bottom: 1rem;
 }
 
+/* Order summary */
 .payonline-details {
   background-color: #fffdf3;
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  padding: 0.9rem 0.9rem;
+  padding: 0.9rem;
   margin-bottom: 1rem;
 }
 
@@ -49,6 +50,7 @@
   font-size: 1.05rem;
 }
 
+/* Items */
 .payonline-items {
   margin-bottom: 1.25rem;
 }
@@ -66,16 +68,97 @@
   color: var(--text-main);
 }
 
-.payonline-actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
+/* UPI App Buttons */
+.upi-apps-section {
   margin-bottom: 1.25rem;
 }
 
-.payonline-actions .btn-primary,
-.payonline-actions .btn-secondary {
-  flex: 1;
+.upi-apps-section h2 {
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.upi-apps-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.upi-app-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background-color: #fffdf3;
+  border: 1.5px solid var(--border-subtle);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  text-decoration: none;
+}
+
+.upi-app-btn:hover {
+  border-color: #111;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 #ffd600;
+}
+
+.upi-app-btn:active {
+  transform: translate(0, 0);
+  box-shadow: none;
+}
+
+.upi-app-emoji {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.upi-app-name {
+  font-size: 0.88rem;
+}
+
+/* I Have Paid section */
+.payonline-paid-section {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.paid-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.btn-paid {
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  border-radius: var(--radius-pill);
+  background-color: #111111;
+  color: #fffdf3;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btn-paid:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 #ffd600;
+}
+
+.btn-paid:active {
+  transform: translate(0, 0);
+  box-shadow: none;
+}
+
+/* QR Code */
+.payonline-qr {
+  text-align: center;
 }
 
 .payonline-qr h2 {
@@ -91,9 +174,16 @@
   background: #fff;
 }
 
+/* Error */
+.error {
+  color: #922b21;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
 @media (max-width: 480px) {
-  .payonline-actions {
-    flex-direction: column;
+  .upi-apps-grid {
+    grid-template-columns: 1fr 1fr;
   }
 
   .qr-img {
@@ -101,4 +191,3 @@
     height: 200px;
   }
 }
-
