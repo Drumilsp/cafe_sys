@@ -134,7 +134,7 @@ const Checkout = () => {
                   checked={paymentMethod === 'online'}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                 />
-                <span>Pay Online (Mock)</span>
+                <span>Pay Online</span>
               </label>
             </div>
           </div>

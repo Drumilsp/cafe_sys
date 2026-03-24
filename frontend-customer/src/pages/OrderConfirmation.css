@@ -1,22 +1,47 @@
+
 .confirmation-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.75rem 1.25rem;
+  padding: 1rem; /* reduce a bit for mobile */
+  overflow-x: hidden; /* prevent horizontal scroll */
 }
 
 .confirmation-card {
-  max-width: 540px;
   width: 100%;
-  padding: 1.75rem 1.5rem 1.9rem;
+  max-width: 540px;
+  padding: 1.5rem;
   border-radius: var(--radius-card);
   background-color: var(--bg-card);
   border: 1px solid black;
   box-shadow: var(--shadow-soft);
   text-align: center;
 }
-
+.detail-item,
+.payment-info,
+.status-step {
+  min-width: 0;
+}
+.detail-item,
+.payment-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap; /* allows breaking instead of hiding */
+}
+.order-id,
+.detail-item span,
+.payment-info span {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.status-progress {
+  display: flex;
+  flex-wrap: wrap; /* allow wrap on smaller widths */
+  justify-content: center;
+  gap: 0.4rem;
+}
 .success-icon {
   width: 64px;
   height: 64px;
@@ -157,4 +182,105 @@
 
 .error {
   color: #922b21;
+}
+
+/* =========================
+   MOBILE (iPhone / small screens)
+   ========================= */
+@media (max-width: 480px) {
+  .confirmation-container {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .confirmation-card {
+    padding: 1.25rem 1rem 1.4rem;
+    border-radius: 16px;
+  }
+
+  .success-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.6rem;
+  }
+
+  .confirmation-card h1 {
+    font-size: 1.2rem;
+  }
+
+  .order-id {
+    font-size: 0.85rem;
+  }
+
+  .status-label {
+    font-size: 0.65rem;
+  }
+
+  .status-line {
+    width: 14px;
+  }
+
+  .order-details {
+    padding: 0.9rem 0.8rem;
+  }
+
+  .detail-item,
+  .detail-total {
+    font-size: 0.8rem;
+  }
+
+  .actions {
+    gap: 0.4rem;
+  }
+}
+
+
+/* =========================
+   TABLET (optional but recommended)
+   ========================= */
+@media (min-width: 481px) and (max-width: 768px) {
+  .confirmation-card {
+    max-width: 480px;
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+
+/* =========================
+   DESKTOP (larger screens)
+   ========================= */
+@media (min-width: 1024px) {
+  .confirmation-card {
+    max-width: 620px;
+    padding: 2rem 2rem 2.2rem;
+  }
+
+  .confirmation-card h1 {
+    font-size: 1.6rem;
+  }
+
+  .order-id {
+    font-size: 1rem;
+  }
+
+  .status-label {
+    font-size: 0.8rem;
+  }
+
+  .status-line {
+    width: 28px;
+  }
+
+  .order-details {
+    padding: 1.25rem 1.2rem;
+  }
+
+  .detail-item,
+  .detail-total {
+    font-size: 0.95rem;
+  }
+
+  .actions {
+    flex-direction: row; /* buttons side-by-side on desktop */
+    justify-content: center;
+  }
 }

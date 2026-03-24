@@ -3,30 +3,34 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import QRCode from 'qrcode';
 import './PayOnline.css';
+import bhim from '../assets/bhim.png' 
+import gpay from '../assets/gpay.png' 
+import paytm from '../assets/paytm.png' 
+import phonepe from '../assets/phonepe-icon.png' 
 
 const UPI_APPS = [
   {
     id: 'gpay',
     name: 'Google Pay',
-    emoji: '🟢',
+    image: gpay,
     scheme: (params) => `tez://upi/pay?${params}`,
   },
   {
     id: 'phonepe',
     name: 'PhonePe',
-    emoji: '🟣',
+    image: phonepe,
     scheme: (params) => `phonepe://pay?${params}`,
   },
   {
     id: 'paytm',
     name: 'Paytm',
-    emoji: '🔵',
+    image: paytm,
     scheme: (params) => `paytmmp://pay?${params}`,
   },
   {
     id: 'bhim',
     name: 'BHIM',
-    emoji: '🟠',
+    image: bhim,
     scheme: (params) => `bhim://pay?${params}`,
   },
 ];
@@ -170,6 +174,12 @@ const PayOnline = () => {
                   href={app.scheme(upiParams)}
                   onClick={(e) => handleUpiAppClick(e, app)}
                 >
+                <img
+                  src={app.image}
+                  alt={app.name}
+                  width={40}
+                  height={40}
+                />
                   <span className="upi-app-emoji">{app.emoji}</span>
                   <span className="upi-app-name">{app.name}</span>
                 </a>
