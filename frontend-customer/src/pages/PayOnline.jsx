@@ -1,34 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import QRCode from 'qrcode';
 import './PayOnline.css';
 
 const UPI_APPS = [
-  {
-    id: 'gpay',
-    name: 'Google Pay',
-    emoji: '🟢',
-    scheme: (params) => `tez://upi/pay?${params}`,
-  },
-  {
-    id: 'phonepe',
-    name: 'PhonePe',
-    emoji: '🟣',
-    scheme: (params) => `phonepe://pay?${params}`,
-  },
-  {
-    id: 'paytm',
-    name: 'Paytm',
-    emoji: '🔵',
-    scheme: (params) => `paytmmp://pay?${params}`,
-  },
-  {
-    id: 'bhim',
-    name: 'BHIM',
-    emoji: '🟠',
-    scheme: (params) => `bhim://pay?${params}`,
-  },
+  { id: 'gpay',    name: 'Google Pay', emoji: '🟢', scheme: (p) => `tez://upi/pay?${p}` },
+  { id: 'phonepe', name: 'PhonePe',    emoji: '🟣', scheme: (p) => `phonepe://pay?${p}` },
+  { id: 'paytm',   name: 'Paytm',      emoji: '🔵', scheme: (p) => `paytmmp://pay?${p}` },
+  { id: 'bhim',    name: 'BHIM',       emoji: '🟠', scheme: (p) => `bhim://pay?${p}` },
 ];
 
 const PayOnline = () => {
@@ -38,6 +18,7 @@ const PayOnline = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [qrDataUrl, setQrDataUrl] = useState('');
+  const upiTapped = useRef(false);
 
   const upiId = import.meta.env.VITE_UPI_ID;
   const cafeName = import.meta.env.VITE_CAFE_NAME || 'Cafe';
@@ -85,22 +66,30 @@ const PayOnline = () => {
     run();
   }, [genericUpiLink]);
 
-  const handlePaid = async () => {
-    try {
-      await axios.patch(`/api/orders/${orderId}/customer-paid`);
-      navigate(`/order-confirmation/${orderId}`);
-    } catch (e) {
-      setError(e.response?.data?.message || 'Unable to submit payment for verification');
-    }
-  };
+  // When user returns from UPI app, auto-submit and navigate to order confirmation
+  useEffect(() => {
+    const onVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && upiTapped.current) {
+        upiTapped.current = false;
+        try {
+          await axios.patch(`/api/orders/${orderId}/customer-paid`);
+          navigate(`/order-confirmation/${orderId}`);
+        } catch (e) {
+          setError(e.response?.data?.message || 'Unable to submit payment for verification');
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [orderId, navigate]);
 
-  const handleUpiAppClick = (e, app) => {
+  const handleUpiAppClick = (e) => {
     if (!upiId) {
       e.preventDefault();
       setError('UPI is not configured. Please contact staff.');
       return;
     }
-    // Let the deep link open; if app not installed, browser handles gracefully
+    upiTapped.current = true;
   };
 
   if (loading) {
@@ -129,7 +118,7 @@ const PayOnline = () => {
       <div className="container">
         <div className="payonline-card">
           <h1>Pay Online</h1>
-          <p className="payonline-subtitle">Tap a UPI app below to pay instantly.</p>
+          <p className="payonline-subtitle">Tap a UPI app to pay. You'll be redirected automatically after payment.</p>
 
           {error && <div className="error">{error}</div>}
 
@@ -168,7 +157,7 @@ const PayOnline = () => {
                   key={app.id}
                   className="upi-app-btn"
                   href={app.scheme(upiParams)}
-                  onClick={(e) => handleUpiAppClick(e, app)}
+                  onClick={handleUpiAppClick}
                 >
                   <span className="upi-app-emoji">{app.emoji}</span>
                   <span className="upi-app-name">{app.name}</span>
@@ -177,15 +166,7 @@ const PayOnline = () => {
             </div>
           </div>
 
-          {/* I Have Paid */}
-          <div className="payonline-paid-section">
-            <p className="paid-hint">After completing payment in your UPI app, tap below:</p>
-            <button type="button" className="btn-paid" onClick={handlePaid}>
-              ✓ I HAVE PAID
-            </button>
-          </div>
-
-          {/* QR Code (existing, preserved) */}
+          {/* QR Code */}
           <div className="payonline-qr">
             <h2>Or Scan QR Code</h2>
             {qrDataUrl ? (
