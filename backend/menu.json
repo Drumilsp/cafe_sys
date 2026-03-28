@@ -1,0 +1,1913 @@
+[
+    {
+        "name": "Orange Juice",
+        "price": 69,
+        "available": true,
+        "category": "Fresh Juices",
+        "imageUrl": ""
+      },
+      {
+        "name": "Mosambi Juice",
+        "price": 50,
+        "available": true,
+        "category": "Fresh Juices",
+        "imageUrl": ""
+      },
+      {
+        "name": "Watermelon Juice",
+        "price": 45,
+        "available": true,
+        "category": "Fresh Juices",
+        "imageUrl": ""
+      },
+      {
+        "name": "Grape Juice (Seasonal)",
+        "price": 55,
+        "available": true,
+        "category": "Fresh Juices",
+        "imageUrl": ""
+      },
+    {
+      "name": "Mango Juice (Seasonal)",
+      "price": 65,
+      "available": true,
+      "category": "Fresh Juices",
+      "imageUrl": ""
+    },
+    {
+      "name": "Muskmelon Juice",
+      "price": 55,
+      "available": true,
+      "category": "Fresh Juices",
+      "imageUrl": ""
+    },
+    {
+      "name": "Papaya Juice",
+      "price": 50,
+      "available": true,
+      "category": "Fresh Juices",
+      "imageUrl": ""
+    },
+    {
+      "name": "Pineapple Juice",
+      "price": 60,
+      "available": true,
+      "category": "Fresh Juices",
+      "imageUrl": ""
+    },
+    {
+      "name": "Lemon Juice",
+      "price": 30,
+      "available": true,
+      "category": "Fresh Juices",
+      "imageUrl": ""
+    },
+    {
+      "name": "Apple Juice",
+      "price": 70,
+      "available": true,
+      "category": "Fresh Juices",
+      "imageUrl": ""
+    },
+    {
+      "name": "Kiwi Juice",
+      "price": 70,
+      "available": true,
+      "category": "Fresh Juices",
+      "imageUrl": ""
+    },
+    {
+      "name": "ABC Juice",
+      "price": 80,
+      "available": true,
+      "category": "Fresh Juices",
+      "imageUrl": ""
+    },
+    {
+      "name": "Pomegranate Juice",
+      "price": 70,
+      "available": true,
+      "category": "Fresh Juices",
+      "imageUrl": ""
+    },
+    {
+      "name": "Banana Milkshake",
+      "price": 50,
+      "available": true,
+      "category": "Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Apple Milkshake",
+      "price": 80,
+      "available": true,
+      "category": "Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Avocado Milkshake",
+      "price": 80,
+      "available": true,
+      "category": "Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chikoo Milkshake",
+      "price": 60,
+      "available": true,
+      "category": "Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mango Milkshake (Seasonal)",
+      "price": 75,
+      "available": true,
+      "category": "Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Oreo Milkshake",
+      "price": 60,
+      "available": true,
+      "category": "Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Cold Coffee",
+      "price": 99,
+      "available": true,
+      "category": "Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Choco Banana Milkshake",
+      "price": 80,
+      "available": true,
+      "category": "Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Dry Fruits Milkshake",
+      "price": 99,
+      "available": true,
+      "category": "Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chocolate Ice-cream Milkshake",
+      "price": 80,
+      "available": true,
+      "category": "Ice Cream Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Strawberry Ice-cream Milkshake",
+      "price": 75,
+      "available": true,
+      "category": "Ice Cream Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Vanilla Ice-cream Milkshake",
+      "price": 70,
+      "available": true,
+      "category": "Ice Cream Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Butterscotch Ice-cream Milkshake",
+      "price": 80,
+      "available": true,
+      "category": "Ice Cream Milkshakes",
+      "imageUrl": ""
+    },
+    {
+      "name": "Sweet Lassi",
+      "price": 50,
+      "available": true,
+      "category": "Lassi",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mango Lassi",
+      "price": 80,
+      "available": true,
+      "category": "Lassi",
+      "imageUrl": ""
+    },
+    {
+      "name": "Dry Fruits Lassi",
+      "price": 109,
+      "available": true,
+      "category": "Lassi",
+      "imageUrl": ""
+    },
+    {
+      "name": "Strawberry Lassi",
+      "price": 99,
+      "available": true,
+      "category": "Lassi",
+      "imageUrl": ""
+    },
+    {
+      "name": "Blue Bliss",
+      "price": 79,
+      "available": true,
+      "category": "Mojitos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Virgin Mojito",
+      "price": 69,
+      "available": true,
+      "category": "Mojitos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Cranberry Mojito",
+      "price": 69,
+      "available": true,
+      "category": "Mojitos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Watermelon Mojito",
+      "price": 69,
+      "available": true,
+      "category": "Mojitos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Tropicana Orange Mojito",
+      "price": 69,
+      "available": true,
+      "category": "Mojitos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Strawberry Mojito",
+      "price": 69,
+      "available": true,
+      "category": "Mojitos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Blueberry Mojito",
+      "price": 69,
+      "available": true,
+      "category": "Mojitos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Tea (Small)",
+      "price": 15,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Tea (Large)",
+      "price": 20,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Ginger Tea (Small)",
+      "price": 20,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Ginger Tea (Large)",
+      "price": 25,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Jaggery Tea (Small)",
+      "price": 20,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Jaggery Tea (Large)",
+      "price": 25,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Black Tea",
+      "price": 15,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Ginger Black Tea",
+      "price": 20,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Organic Green Tea",
+      "price": 20,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Lemon Tea",
+      "price": 20,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Honey Lemon Tea",
+      "price": 25,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Lemon Ginger Tea",
+      "price": 25,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Classic Coffee (Small)",
+      "price": 15,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Classic Coffee (Large)",
+      "price": 20,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Filter Coffee (Small)",
+      "price": 20,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Filter Coffee (Large)",
+      "price": 25,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Black Coffee",
+      "price": 15,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Bun Maska",
+      "price": 50,
+      "available": true,
+      "category": "Hot Beverages",
+      "imageUrl": ""
+    },
+    {
+      "name": "Manchow Soup (Veg)",
+      "price": 99,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Manchow Soup (Chicken)",
+      "price": 119,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Burnt Garlic Soup (Veg)",
+      "price": 89,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Burnt Garlic Soup (Chicken)",
+      "price": 109,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Lemon Coriander Soup (Veg)",
+      "price": 89,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Lemon Coriander Soup (Chicken)",
+      "price": 109,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Hot & Sour Soup (Veg)",
+      "price": 79,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Hot & Sour Soup (Chicken)",
+      "price": 99,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Cream of Mushroom",
+      "price": 109,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Cream of Broccoli",
+      "price": 119,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Cream of Chicken",
+      "price": 119,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Cream of Prawns",
+      "price": 139,
+      "available": true,
+      "category": "Soups",
+      "imageUrl": ""
+    },
+    {
+      "name": "Honey Chilly Potato",
+      "price": 149,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Duplex",
+      "price": 149,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Ball Manchurian",
+      "price": 169,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Crackling Spinach",
+      "price": 119,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Boiled Veg",
+      "price": 149,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Ghee Roast",
+      "price": 179,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Cashew Nut Fry",
+      "price": 209,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Crispy Veg",
+      "price": 99,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Kabab",
+      "price": 149,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Kabab",
+      "price": 139,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Gobi Chilly",
+      "price": 109,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Chilly",
+      "price": 139,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Chilly",
+      "price": 119,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Baby Corn Chilly",
+      "price": 129,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Baby Corn Manchurian",
+      "price": 129,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Manchurian",
+      "price": 139,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Gobi Manchurian",
+      "price": 99,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Manchurian",
+      "price": 119,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Baby Corn Pepper Dry",
+      "price": 129,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Gobi Pepper Dry",
+      "price": 109,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Pepper Dry",
+      "price": 139,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Pepper Dry",
+      "price": 119,
+      "available": true,
+      "category": "Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Donut",
+      "price": 199,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Kabab",
+      "price": 139,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Lemon Chicken",
+      "price": 159,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mexican Lemon Chicken",
+      "price": 189,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Majestic",
+      "price": 179,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Ghee Roast",
+      "price": 199,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Fry",
+      "price": 159,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chilly Chicken",
+      "price": 159,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Manchurian",
+      "price": 169,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Pepper Dry",
+      "price": 159,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken 65",
+      "price": 149,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Garlic Chicken",
+      "price": 169,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Dragon Chicken",
+      "price": 179,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chilli Garlic Pepper Chicken",
+      "price": 169,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Lollipop",
+      "price": 169,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Drums of Heaven",
+      "price": 209,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Red Thai Chilly Chicken",
+      "price": 199,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "Green Thai Chilly Chicken",
+      "price": 199,
+      "available": true,
+      "category": "Non Veg Starters",
+      "imageUrl": ""
+    },
+    {
+      "name": "French Fries",
+      "price": 79,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Peri Peri Fries",
+      "price": 89,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Crispy Corn",
+      "price": 99,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Nuggets",
+      "price": 89,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Cheese Corn Nuggets",
+      "price": 99,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Cheesy Pizza Fingers",
+      "price": 99,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Potato Smiles",
+      "price": 99,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chilli Garlic Potato Shorts",
+      "price": 89,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Corn Cheese Balls",
+      "price": 159,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Nuggets",
+      "price": 99,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Popcorn",
+      "price": 99,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Fingers",
+      "price": 119,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Wings",
+      "price": 149,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Breast Strips",
+      "price": 139,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Cheese Balls",
+      "price": 169,
+      "available": true,
+      "category": "Fried Items",
+      "imageUrl": ""
+    },
+    {
+      "name": "Boiled Egg (2 Eggs)",
+      "price": 49,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Plain Omelet",
+      "price": 50,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Masala Omelet",
+      "price": 65,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Bread Omelet",
+      "price": 89,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Bread Cheese Omelet",
+      "price": 120,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Chilly",
+      "price": 129,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Pepper Dry",
+      "price": 119,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Manchurian",
+      "price": 139,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Pakoda",
+      "price": 119,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Devil Egg",
+      "price": 119,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg 65",
+      "price": 139,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Burji",
+      "price": 89,
+      "available": true,
+      "category": "Egg Specials",
+      "imageUrl": ""
+    },
+    {
+      "name": "Steam Momos (Veg)",
+      "price": 99,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Steam Momos (Chicken)",
+      "price": 109,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Fried Momos (Veg)",
+      "price": 119,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Fried Momos (Chicken)",
+      "price": 129,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Kurkure Fried Momos (Veg)",
+      "price": 139,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Kurkure Fried Momos (Chicken)",
+      "price": 149,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Peri-Peri Momos (Veg)",
+      "price": 139,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Peri-Peri Momos (Chicken)",
+      "price": 149,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Schezwan Momos (Veg)",
+      "price": 159,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Schezwan Momos (Chicken)",
+      "price": 179,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chilly Garlic Momos (Veg)",
+      "price": 159,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chilly Garlic Momos (Chicken)",
+      "price": 179,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Afgani Momos (Veg)",
+      "price": 139,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Afgani Momos (Chicken)",
+      "price": 149,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Jhol Momos (Semi Gravy) (Veg)",
+      "price": 149,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Jhol Momos (Semi Gravy) (Chicken)",
+      "price": 169,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Taipo",
+      "price": 109,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Taipo",
+      "price": 99,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Taipo",
+      "price": 119,
+      "available": true,
+      "category": "Momos",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Wrap",
+      "price": 99,
+      "available": true,
+      "category": "Wrap & Fried Rolls",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Wrap",
+      "price": 119,
+      "available": true,
+      "category": "Wrap & Fried Rolls",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Wrap",
+      "price": 109,
+      "available": true,
+      "category": "Wrap & Fried Rolls",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Wrap",
+      "price": 119,
+      "available": true,
+      "category": "Wrap & Fried Rolls",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Wrap",
+      "price": 129,
+      "available": true,
+      "category": "Wrap & Fried Rolls",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Egg Wrap",
+      "price": 149,
+      "available": true,
+      "category": "Wrap & Fried Rolls",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Spring Roll (Fried)",
+      "price": 89,
+      "available": true,
+      "category": "Wrap & Fried Rolls",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Spring Roll (Fried)",
+      "price": 109,
+      "available": true,
+      "category": "Wrap & Fried Rolls",
+      "imageUrl": ""
+    },
+    {
+      "name": "Dragon Chicken Roll (Fried)",
+      "price": 149,
+      "available": true,
+      "category": "Wrap & Fried Rolls",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Patty Burger",
+      "price": 99,
+      "available": true,
+      "category": "Burgers",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Patty Burger",
+      "price": 119,
+      "available": true,
+      "category": "Burgers",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Patty Burger",
+      "price": 119,
+      "available": true,
+      "category": "Burgers",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Sandwich (Small)",
+      "price": 60,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Sandwich (Jumbo)",
+      "price": 100,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Sandwich (Small)",
+      "price": 80,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Sandwich (Jumbo)",
+      "price": 130,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Sweet Corn Sandwich (Small)",
+      "price": 80,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Sweet Corn Sandwich (Jumbo)",
+      "price": 130,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Corn Spinach Sandwich (Small)",
+      "price": 90,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Corn Spinach Sandwich (Jumbo)",
+      "price": 140,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Sandwich (Small)",
+      "price": 80,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Sandwich (Jumbo)",
+      "price": 130,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Sandwich (Small)",
+      "price": 70,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Sandwich (Jumbo)",
+      "price": 130,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Sandwich (Small)",
+      "price": 90,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Sandwich (Jumbo)",
+      "price": 140,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Chicken Sandwich (Small)",
+      "price": 110,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Chicken Sandwich (Jumbo)",
+      "price": 160,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Bread & Jam (Small)",
+      "price": 39,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Bread & Jam (Jumbo)",
+      "price": 69,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Bread & Jam with Butter (Small)",
+      "price": 60,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Bread & Jam with Butter (Jumbo)",
+      "price": 90,
+      "available": true,
+      "category": "Sandwich",
+      "imageUrl": ""
+    },
+    {
+      "name": "Masala Maggie",
+      "price": 45,
+      "available": true,
+      "category": "Maggie",
+      "imageUrl": ""
+    },
+    {
+      "name": "Vegetable Maggie",
+      "price": 60,
+      "available": true,
+      "category": "Maggie",
+      "imageUrl": ""
+    },
+    {
+      "name": "Sweet Corn Maggie",
+      "price": 60,
+      "available": true,
+      "category": "Maggie",
+      "imageUrl": ""
+    },
+    {
+      "name": "Double Egg Maggie",
+      "price": 80,
+      "available": true,
+      "category": "Maggie",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Maggie",
+      "price": 80,
+      "available": true,
+      "category": "Maggie",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Fried Maggie",
+      "price": 80,
+      "available": true,
+      "category": "Maggie",
+      "imageUrl": ""
+    },
+    {
+      "name": "Double Egg Fried Maggie",
+      "price": 100,
+      "available": true,
+      "category": "Maggie",
+      "imageUrl": ""
+    },
+    {
+      "name": "Alfredo Pasta (Veg)",
+      "price": 149,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Alfredo Pasta (Chicken)",
+      "price": 179,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Tetrogena Arvendo Pasta (Veg)",
+      "price": 169,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Tetrogena Arvendo Pasta (Chicken)",
+      "price": 199,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Arabita Pasta (Veg)",
+      "price": 149,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Arabita Pasta (Chicken)",
+      "price": 169,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Pesto Pasta (Veg)",
+      "price": 159,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Pesto Pasta (Chicken)",
+      "price": 189,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Pink Sauce Pasta (Veg)",
+      "price": 159,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Pink Sauce Pasta (Chicken)",
+      "price": 189,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mac & Cheese Pasta (Veg)",
+      "price": 149,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mac & Cheese Pasta (Chicken)",
+      "price": 179,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mac & Cheese Pasta (Prawns)",
+      "price": 199,
+      "available": true,
+      "category": "Pasta",
+      "imageUrl": ""
+    },
+    {
+      "name": "Jalapeno Cheese Pizza (Veg)",
+      "price": 219,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Jalapeno Cheese Pizza (Chicken)",
+      "price": 249,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Italian Margherita Pizza (Veg)",
+      "price": 219,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Italian Margherita Pizza (Chicken)",
+      "price": 269,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Corn Cheese Grill Pizza (Veg)",
+      "price": 179,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Corn Cheese Grill Pizza (Chicken)",
+      "price": 199,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Grill Pizza (Veg)",
+      "price": 229,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Grill Pizza (Chicken)",
+      "price": 259,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Tandoori Paneer Grill Pizza (Veg)",
+      "price": 249,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Tandoori Paneer Grill Pizza (Chicken)",
+      "price": 279,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Loaded Pizza",
+      "price": 219,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Loaded Pizza",
+      "price": 249,
+      "available": true,
+      "category": "Pizza",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Shangai Fried Rice / Noodles",
+      "price": 139,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Fried Rice / Noodles",
+      "price": 99,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Schezwan Fried Rice / Noodles",
+      "price": 119,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Fried Rice / Noodles",
+      "price": 119,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Schezwan Fried Rice / Noodles",
+      "price": 139,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Fried Rice / Noodles",
+      "price": 119,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Schezwan Fried Rice / Noodles",
+      "price": 139,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Gobi Fried Rice / Noodles",
+      "price": 109,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Gobi Schezwan Fried Rice / Noodles",
+      "price": 129,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Fried Rice / Noodles",
+      "price": 109,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Schezwan Rice / Noodles",
+      "price": 119,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Fried Rice / Noodles",
+      "price": 149,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Schezwan Fried Rice / Noodles",
+      "price": 169,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chilly Garlic Chicken Fried Rice / Noodles",
+      "price": 179,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Shangai Fried Rice / Noodles",
+      "price": 179,
+      "available": true,
+      "category": "Fried Rice & Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Dum Biryani",
+      "price": 189,
+      "available": true,
+      "category": "Biryani",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Kebab Biryani",
+      "price": 199,
+      "available": true,
+      "category": "Biryani",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Ghee Roast Biryani",
+      "price": 219,
+      "available": true,
+      "category": "Biryani",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Biryani",
+      "price": 159,
+      "available": true,
+      "category": "Biryani",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Hyderabadi Biryani",
+      "price": 149,
+      "available": true,
+      "category": "Biryani",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Biryani",
+      "price": 169,
+      "available": true,
+      "category": "Biryani",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer 65 Biryani",
+      "price": 179,
+      "available": true,
+      "category": "Biryani",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Ghee Roast Biryani",
+      "price": 189,
+      "available": true,
+      "category": "Biryani",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Hyderabadi",
+      "price": 119,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Kadai",
+      "price": 119,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Dal Fry",
+      "price": 109,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Dal Tadka",
+      "price": 119,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Methi Malai Mutter",
+      "price": 149,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Butter Masala",
+      "price": 129,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Masala",
+      "price": 119,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Chettinad",
+      "price": 129,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Kadai Paneer",
+      "price": 139,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Punjabi",
+      "price": 149,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Masala",
+      "price": 99,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Prawns Masala",
+      "price": 199,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Angari Chicken",
+      "price": 129,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Punjabi",
+      "price": 129,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Butter Masala",
+      "price": 139,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Hyderabadi",
+      "price": 119,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Kolhapuri",
+      "price": 129,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mughlai Chicken",
+      "price": 139,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Murg Methi Chaman",
+      "price": 149,
+      "available": true,
+      "category": "Indian Gravy",
+      "imageUrl": ""
+    },
+    {
+      "name": "Dal Khichdi",
+      "price": 119,
+      "available": true,
+      "category": "Khichdi",
+      "imageUrl": ""
+    },
+    {
+      "name": "Palak Khichdi",
+      "price": 119,
+      "available": true,
+      "category": "Khichdi",
+      "imageUrl": ""
+    },
+    {
+      "name": "Dal Palak Khichdi",
+      "price": 149,
+      "available": true,
+      "category": "Khichdi",
+      "imageUrl": ""
+    },
+    {
+      "name": "Pulka",
+      "price": 15,
+      "available": true,
+      "category": "Roti",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chapati",
+      "price": 20,
+      "available": true,
+      "category": "Roti",
+      "imageUrl": ""
+    },
+    {
+      "name": "Kerala Parota",
+      "price": 25,
+      "available": true,
+      "category": "Roti",
+      "imageUrl": ""
+    },
+    {
+      "name": "Aloo Parota",
+      "price": 50,
+      "available": true,
+      "category": "Roti",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Parota",
+      "price": 70,
+      "available": true,
+      "category": "Roti",
+      "imageUrl": ""
+    },
+    {
+      "name": "Gulab Jamun (2 Pcs)",
+      "price": 45,
+      "available": true,
+      "category": "Desserts",
+      "imageUrl": ""
+    },
+    {
+      "name": "Jamun with Ice Cream",
+      "price": 69,
+      "available": true,
+      "category": "Desserts",
+      "imageUrl": ""
+    },
+    {
+      "name": "Carrot Halwa",
+      "price": 69,
+      "available": true,
+      "category": "Desserts",
+      "imageUrl": ""
+    },
+    {
+      "name": "Halwa with Ice Cream",
+      "price": 89,
+      "available": true,
+      "category": "Desserts",
+      "imageUrl": ""
+    },
+    {
+      "name": "Cheese Cake",
+      "price": 99,
+      "available": true,
+      "category": "Desserts",
+      "imageUrl": ""
+    },
+    {
+      "name": "American Banana Split",
+      "price": 89,
+      "available": true,
+      "category": "Desserts",
+      "imageUrl": ""
+    }
+  ]

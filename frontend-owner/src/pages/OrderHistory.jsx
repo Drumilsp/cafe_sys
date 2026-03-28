@@ -1,150 +1,137 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
-import './Dashboard.css';
+import OwnerLayout from '../components/OwnerLayout';
+import './OrderHistory.css';
+
+const STATUS_COLORS = {
+  pending: '#f59e0b',
+  verifying_payment: '#8b5cf6',
+  preparing: '#0ea5e9',
+  ready: '#22c55e',
+  delivered: '#6b7280',
+};
+
+const fmt = (d) =>
+  new Date(d).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user, logout } = useAuth();
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await axios.get('/api/orders?sortBy=time&sortOrder=desc');
-        setOrders(res.data.data || []);
-      } catch (err) {
-        console.error('Failed to fetch order history:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
+    axios.get('/api/orders?sortBy=time&sortOrder=desc')
+      .then((res) => setOrders(res.data.data || []))
+      .catch((err) => console.error('Failed to fetch order history:', err))
+      .finally(() => setLoading(false));
   }, []);
 
-  const groupByDay = (list) => {
-    const map = new Map();
-    list.forEach((order) => {
-      const dateKey = new Date(order.createdAt).toISOString().split('T')[0];
-      if (!map.has(dateKey)) {
-        map.set(dateKey, []);
-      }
-      map.get(dateKey).push(order);
-    });
-    return Array.from(map.entries()).sort((a, b) => (a[0] < b[0] ? 1 : -1));
-  };
+  const filtered = orders.filter((o) => {
+    const term = search.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      o.orderId?.toLowerCase().includes(term) ||
+      o.customer?.name?.toLowerCase().includes(term) ||
+      o.customer?.phone?.includes(term)
+    );
+  });
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: '#ffc107',
-      verifying_payment: '#6f42c1',
-      preparing: '#17a2b8',
-      ready: '#28a745',
-      delivered: '#6c757d',
-    };
-    return colors[status] || '#6c757d';
-  };
+  const grouped = filtered.reduce((acc, order) => {
+    const key = new Date(order.createdAt).toISOString().split('T')[0];
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(order);
+    return acc;
+  }, {});
+
+  const sortedDays = Object.keys(grouped).sort((a, b) => (a < b ? 1 : -1));
 
   if (loading) {
     return (
-      <div className="dashboard-container">
-        <div className="loading">Loading history...</div>
-      </div>
+      <OwnerLayout title="Order History">
+        <div className="oh-empty">Loading history…</div>
+      </OwnerLayout>
     );
   }
 
-  const grouped = groupByDay(orders);
-
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <div className="header-content">
-          <h1>Order History</h1>
-          <div className="header-actions">
-            <Link to="/dashboard" className="nav-link">
-              Dashboard
-            </Link>
-            <Link to="/menu" className="nav-link">
-              Manage Menu
-            </Link>
-            <span className="user-name">Welcome, {user?.name}</span>
-            <button onClick={logout} className="logout-btn">
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
+    <OwnerLayout title="Order History">
+      <input
+        className="oh-search"
+        type="text"
+        placeholder="Search by order ID, customer name or phone…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
-      <div className="container">
-        {grouped.length === 0 ? (
-          <div className="empty-state">No orders found in history.</div>
-        ) : (
-          grouped.map(([dateKey, dayOrders]) => (
-            <section key={dateKey} className="eod-section">
-              <h2 className="section-title">
-                {new Date(dateKey).toLocaleDateString(undefined, {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </h2>
-              <div className="orders-list">
+      {sortedDays.length === 0 ? (
+        <div className="oh-empty">{search ? 'No orders match your search.' : 'No orders found.'}</div>
+      ) : (
+        sortedDays.map((dateKey) => {
+          const dayOrders = grouped[dateKey];
+          const dayTotal = dayOrders.reduce((s, o) => s + o.totalAmount, 0);
+          return (
+            <section key={dateKey} className="oh-day-section">
+              <div className="oh-day-header">
+                <span className="oh-day-label">
+                  {new Date(dateKey).toLocaleDateString(undefined, {
+                    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+                  })}
+                </span>
+                <span className="oh-day-summary">
+                  {dayOrders.length} order{dayOrders.length !== 1 ? 's' : ''} · ₹{dayTotal}
+                </span>
+              </div>
+
+              <div className="oh-cards">
                 {dayOrders.map((order) => (
-                  <div key={order._id} className="order-card eod-card">
-                    <div className="order-header">
+                  <div key={order._id} className="oh-card">
+                    <div className="oh-card-header">
                       <div>
-                        <h3>Order #{order.orderId}</h3>
+                        <div className="oh-order-id">#{order.orderId}</div>
                         {order.customer && (
-                          <p className="customer-info">
-                            {order.customer.name} — {order.customer.phone}
-                          </p>
+                          <div className="oh-customer">
+                            {order.customer.name}
+                            {order.customer.phone && order.customer.phone !== '0000000000'
+                              ? ` · ${order.customer.phone}` : ''}
+                          </div>
                         )}
-                        <p className="order-time">
-                          {new Date(order.createdAt).toLocaleString()}
-                        </p>
+                        <div className="oh-time">{fmt(order.createdAt)}</div>
                       </div>
                       <span
-                        className="status-badge"
-                        style={{ backgroundColor: getStatusColor(order.orderStatus) }}
+                        className="oh-status-badge"
+                        style={{ background: STATUS_COLORS[order.orderStatus] || '#6b7280' }}
                       >
-                        {order.orderStatus.charAt(0).toUpperCase() +
-                          order.orderStatus.slice(1)}
+                        {order.orderStatus.replace('_', ' ')}
                       </span>
                     </div>
-                    <div className="order-items">
+
+                    <div className="oh-items">
                       {order.items.map((item, idx) => (
-                        <div key={idx} className="order-item">
-                          <span>
-                            {item.menuItem.name} x {item.quantity}
-                          </span>
+                        <div key={idx} className="oh-item-row">
+                          <span>{item.menuItem?.name || 'Item'} × {item.quantity}</span>
                           <span>₹{item.priceAtTime * item.quantity}</span>
                         </div>
                       ))}
                     </div>
-                    <div className="order-footer">
-                      <div className="order-total">
-                        <span>Total:</span>
-                        <span>₹{order.totalAmount}</span>
-                      </div>
-                      <div className="payment-info">
-                        <span>
-                          {order.paymentMethod === 'online' ? 'Online' : 'Counter'} —{' '}
-                          {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
-                        </span>
-                      </div>
+
+                    <div className="oh-card-footer">
+                      <span className="oh-total">₹{order.totalAmount}</span>
+                      <span className="oh-pay-info">
+                        {order.paymentMethod === 'online' ? 'Online' : 'Counter'} ·{' '}
+                        {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                        {order.serviceType === 'table' && order.tableNumber
+                          ? ` · Table ${order.tableNumber}` : ''}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
             </section>
-          ))
-        )}
-      </div>
-    </div>
+          );
+        })
+      )}
+    </OwnerLayout>
   );
 };
 
 export default OrderHistory;
-

@@ -1,0 +1,85 @@
+.oh-search {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  background: var(--bg-card);
+  margin-bottom: 1.25rem;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.oh-search:focus { border-color: #111; outline: none; }
+
+.oh-empty {
+  text-align: center; padding: 4rem;
+  color: var(--text-muted); font-size: 0.95rem;
+}
+
+.oh-day-section { margin-bottom: 2rem; }
+
+.oh-day-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-subtle);
+}
+
+.oh-day-label {
+  font-size: 0.95rem; font-weight: 700; color: var(--text-main);
+}
+
+.oh-day-summary {
+  font-size: 0.82rem; color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-subtle);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+}
+
+.oh-cards { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.oh-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  padding: 0.9rem 1rem;
+  transition: box-shadow 0.15s;
+}
+.oh-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+
+.oh-card-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 0.6rem;
+}
+
+.oh-order-id { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.1rem; }
+.oh-customer { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.1rem; }
+.oh-time { font-size: 0.75rem; color: var(--text-muted); }
+
+.oh-status-badge {
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.72rem; font-weight: 700;
+  white-space: nowrap;
+}
+
+.oh-items { margin-bottom: 0.6rem; }
+
+.oh-item-row {
+  display: flex; justify-content: space-between;
+  padding: 0.25rem 0;
+  font-size: 0.85rem; color: var(--text-muted);
+  border-bottom: 1px dashed var(--border-subtle);
+}
+.oh-item-row:last-child { border-bottom: none; }
+
+.oh-card-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.oh-total { font-size: 0.95rem; font-weight: 700; }
+.oh-pay-info { font-size: 0.78rem; color: var(--text-muted); }

@@ -1,382 +1,290 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
+import OwnerLayout from '../components/OwnerLayout';
 import './MenuManagement.css';
+
+const CATEGORIES_ALL = 'All';
+
+const EditModal = ({ item, onClose, onSaved }) => {
+  const [form, setForm] = useState({
+    name: item.name,
+    price: item.price.toString(),
+    category: item.category || 'general',
+    available: item.available,
+    imageUrl: item.imageUrl || '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    try {
+      await axios.put(`/api/menu/${item._id}`, {
+        ...form,
+        price: parseFloat(form.price),
+      });
+      onSaved();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mm-modal-overlay" onClick={onClose}>
+      <div className="mm-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="mm-modal-header">
+          <h2>Edit Item</h2>
+          <button className="mm-modal-close" onClick={onClose}>✕</button>
+        </div>
+        <form onSubmit={handleSubmit} className="mm-modal-form">
+          <div className="mm-field">
+            <label>Name *</label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+            />
+          </div>
+          <div className="mm-field-row">
+            <div className="mm-field">
+              <label>Price (₹) *</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                required
+              />
+            </div>
+            <div className="mm-field">
+              <label>Category</label>
+              <input
+                type="text"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                placeholder="e.g. drinks, food"
+              />
+            </div>
+          </div>
+          <div className="mm-field">
+            <label>Image URL</label>
+            <input
+              type="url"
+              value={form.imageUrl}
+              onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+          <div className="mm-field mm-field-check">
+            <label>
+              <input
+                type="checkbox"
+                checked={form.available}
+                onChange={(e) => setForm({ ...form, available: e.target.checked })}
+              />
+              Available
+            </label>
+          </div>
+          {error && <div className="mm-error">{error}</div>}
+          <div className="mm-modal-actions">
+            <button type="button" className="mm-btn-secondary" onClick={onClose}>Cancel</button>
+            <button type="submit" className="mm-btn-primary" disabled={saving}>
+              {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const MenuManagement = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tables, setTables] = useState([]);
-  const [tableName, setTableName] = useState('');
-  const [showForm, setShowForm] = useState(false);
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState(CATEGORIES_ALL);
   const [editingItem, setEditingItem] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    category: 'general',
-    available: true,
-    imageUrl: '',
-  });
-  const { logout } = useAuth();
+  const [togglingId, setTogglingId] = useState(null);
 
-  useEffect(() => {
-    fetchMenu();
-    fetchTables();
-  }, []);
-
-  const fetchMenu = async () => {
+  const fetchMenu = useCallback(async () => {
     try {
-      const response = await axios.get('/api/menu');
-      setMenuItems(response.data.data);
-    } catch (error) {
-      console.error('Failed to fetch menu:', error);
+      const res = await axios.get('/api/menu');
+      setMenuItems(res.data.data);
+    } catch (err) {
+      console.error('Failed to fetch menu:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchTables = async () => {
+  useEffect(() => { fetchMenu(); }, [fetchMenu]);
+
+  const categories = [CATEGORIES_ALL, ...Array.from(new Set(menuItems.map((i) => i.category || 'general')))];
+
+  const filtered = menuItems.filter((item) => {
+    const matchCat = activeCategory === CATEGORIES_ALL || (item.category || 'general') === activeCategory;
+    const term = search.trim().toLowerCase();
+    const matchSearch = !term || item.name.toLowerCase().includes(term);
+    return matchCat && matchSearch;
+  });
+
+  const handleToggle = async (item) => {
+    setTogglingId(item._id);
     try {
-      const response = await axios.get('/api/tables');
-      setTables(response.data.data || []);
-    } catch (error) {
-      console.error('Failed to fetch tables:', error);
+      await axios.patch(`/api/menu/${item._id}/availability`, { available: !item.available });
+      setMenuItems((prev) => prev.map((i) => i._id === item._id ? { ...i, available: !i.available } : i));
+    } catch (err) {
+      console.error('Failed to toggle availability:', err);
+    } finally {
+      setTogglingId(null);
     }
   };
 
-  const handleDelete = async (itemId) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this item?');
-    if (!confirmDelete) return;
-
+  const handleDelete = async (item) => {
+    if (!window.confirm(`Delete "${item.name}"?`)) return;
     try {
-      await axios.delete(`/api/menu/${itemId}`);
-      fetchMenu();
-    } catch (error) {
-      console.error('Failed to delete menu item:', error);
-      alert('Failed to delete menu item');
+      await axios.delete(`/api/menu/${item._id}`);
+      setMenuItems((prev) => prev.filter((i) => i._id !== item._id));
+    } catch (err) {
+      console.error('Failed to delete:', err);
+      alert('Failed to delete item');
     }
   };
 
-  const handleReorder = async (newItems) => {
-    setMenuItems(newItems);
-    try {
-      await axios.put('/api/menu/reorder/all', {
-        ids: newItems.map((item) => item._id),
-      });
-    } catch (error) {
-      console.error('Failed to reorder items:', error);
-      alert('Failed to reorder items');
-      fetchMenu();
-    }
-  };
-
-  const onDragStart = (e, index) => {
-    e.dataTransfer.setData('text/plain', index.toString());
-  };
-
-  const onDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  const onDrop = (e, index) => {
+  const handleDragStart = (e, index) => e.dataTransfer.setData('text/plain', index.toString());
+  const handleDragOver = (e) => e.preventDefault();
+  const handleDrop = async (e, toIndex) => {
     e.preventDefault();
     const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-    if (Number.isNaN(fromIndex) || fromIndex === index) return;
+    if (isNaN(fromIndex) || fromIndex === toIndex) return;
     const updated = [...menuItems];
     const [moved] = updated.splice(fromIndex, 1);
-    updated.splice(index, 0, moved);
-    handleReorder(updated);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    updated.splice(toIndex, 0, moved);
+    setMenuItems(updated);
     try {
-      if (editingItem) {
-        await axios.put(`/api/menu/${editingItem._id}`, formData);
-      } else {
-        await axios.post('/api/menu', formData);
-      }
+      await axios.put('/api/menu/reorder/all', { ids: updated.map((i) => i._id) });
+    } catch (err) {
+      console.error('Reorder failed:', err);
       fetchMenu();
-      resetForm();
-    } catch (error) {
-      console.error('Failed to save menu item:', error);
-      alert('Failed to save menu item');
     }
   };
 
-  const handleEdit = (item) => {
-    setEditingItem(item);
-    setFormData({
-      name: item.name,
-      price: item.price.toString(),
-      category: item.category,
-      available: item.available,
-      imageUrl: item.imageUrl || '',
-    });
-    setShowForm(true);
-  };
-
-  const handleToggleAvailability = async (itemId, currentStatus) => {
-    try {
-      await axios.patch(`/api/menu/${itemId}/availability`, {
-        available: !currentStatus,
-      });
-      fetchMenu();
-    } catch (error) {
-      console.error('Failed to toggle availability:', error);
-      alert('Failed to update availability');
-    }
-  };
-
-  const handleAddTable = async (e) => {
-    e.preventDefault();
-    if (!tableName.trim()) return;
-    try {
-      await axios.post('/api/tables', { name: tableName.trim() });
-      setTableName('');
-      fetchTables();
-    } catch (error) {
-      console.error('Failed to add table:', error);
-      alert(error.response?.data?.message || 'Failed to add table');
-    }
-  };
-
-  const handleDeleteTable = async (id) => {
-    const confirmDelete = window.confirm('Delete this table?');
-    if (!confirmDelete) return;
-    try {
-      await axios.delete(`/api/tables/${id}`);
-      fetchTables();
-    } catch (error) {
-      console.error('Failed to delete table:', error);
-      alert('Failed to delete table');
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      price: '',
-      category: 'general',
-      available: true,
-      imageUrl: '',
-    });
-    setEditingItem(null);
-    setShowForm(false);
-  };
+  // Group filtered items by category for display
+  const grouped = filtered.reduce((acc, item) => {
+    const cat = item.category || 'general';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(item);
+    return acc;
+  }, {});
 
   if (loading) {
     return (
-      <div className="menu-management-container">
-        <div className="loading">Loading menu...</div>
-      </div>
+      <OwnerLayout title="Manage Menu">
+        <div className="mm-loading">Loading menu…</div>
+      </OwnerLayout>
     );
   }
 
   return (
-    <div className="menu-management-container">
-      <header className="menu-header">
-        <div className="header-content">
-          <h1>Menu Management</h1>
-          <div className="header-actions">
-            <Link to="/dashboard" className="nav-link">Dashboard</Link>
-            <button onClick={logout} className="logout-btn">Logout</button>
-          </div>
-        </div>
-      </header>
-
-      <div className="container">
-        <div className="menu-actions">
-          <button onClick={() => setShowForm(!showForm)} className="btn-primary">
-            {showForm ? 'Cancel' : 'Add New Item'}
-          </button>
-        </div>
-
-        <div className="tables-section">
-          <h2 className="section-title">Tables</h2>
-          <form onSubmit={handleAddTable} className="menu-form">
-            <div className="form-row">
-              <div className="form-group">
-                <label>Table Name / Number</label>
-                <input
-                  type="text"
-                  value={tableName}
-                  onChange={(e) => setTableName(e.target.value)}
-                  placeholder="e.g. 1, 2, A1"
-                />
-              </div>
-            </div>
-            <div className="form-actions">
-              <button type="submit" className="btn-primary">
-                Add Table
-              </button>
-            </div>
-          </form>
-          <div className="menu-list">
-            {tables.length === 0 ? (
-              <div className="empty-state">No tables configured yet.</div>
-            ) : (
-              <table className="menu-table">
-                <thead>
-                  <tr>
-                    <th>Table</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tables.map((table) => (
-                    <tr key={table._id}>
-                      <td>{table.name}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className="delete-btn"
-                          onClick={() => handleDeleteTable(table._id)}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-
-        {showForm && (
-          <form onSubmit={handleSubmit} className="menu-form">
-            <h2>{editingItem ? 'Edit Item' : 'Add New Item'}</h2>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Name *</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Price (₹) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Category</label>
-                <input
-                  type="text"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  placeholder="e.g., drinks, food, snacks"
-                />
-              </div>
-              <div className="form-group">
-                <label>Image URL</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={formData.available}
-                  onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
-                />
-                Available
-              </label>
-            </div>
-            <div className="form-actions">
-              <button type="submit" className="btn-primary">
-                {editingItem ? 'Update' : 'Add'} Item
-              </button>
-              {editingItem && (
-                <button type="button" onClick={resetForm} className="btn-secondary">
-                  Cancel
-                </button>
-              )}
-            </div>
-          </form>
-        )}
-
-        <div className="menu-list">
-          {menuItems.length === 0 ? (
-            <div className="empty-state">No menu items. Add your first item!</div>
-          ) : (
-            <table className="menu-table">
-              <thead>
-                <tr>
-                  <th>Order</th>
-                  <th>Name</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {menuItems.map((item, index) => (
-                  <tr
-                    key={item._id}
-                    draggable
-                    onDragStart={(e) => onDragStart(e, index)}
-                    onDragOver={onDragOver}
-                    onDrop={(e) => onDrop(e, index)}
-                    className="draggable-row"
-                  >
-                    <td>
-                      <span className="drag-handle">⋮⋮</span>
-                    </td>
-                    <td>{item.name}</td>
-                    <td>{item.category}</td>
-                    <td>₹{item.price}</td>
-                    <td>
-                      <span className={`status ${item.available ? 'available' : 'unavailable'}`}>
-                        {item.available ? 'Available' : 'Unavailable'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          onClick={() => handleToggleAvailability(item._id, item.available)}
-                          className="toggle-btn"
-                        >
-                          {item.available ? 'Disable' : 'Enable'}
-                        </button>
-                        <button onClick={() => handleEdit(item)} className="edit-btn">
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(item._id)}
-                          className="delete-btn"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+    <OwnerLayout title="Manage Menu">
+      <div className="mm-toolbar">
+        <input
+          className="mm-search"
+          type="text"
+          placeholder="Search items…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <Link to="/menu/add" className="mm-btn-primary mm-add-link">+ Add Item</Link>
       </div>
-    </div>
+
+      <div className="mm-cat-pills">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            className={`mm-cat-pill ${activeCategory === cat ? 'active' : ''}`}
+            onClick={() => setActiveCategory(cat)}
+          >
+            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="mm-empty">
+          {search ? `No items matching "${search}"` : 'No items yet. Add your first item!'}
+        </div>
+      ) : (
+        Object.entries(grouped).map(([cat, items]) => (
+          <section key={cat} className="mm-category-section">
+            {activeCategory === CATEGORIES_ALL && (
+              <h2 className="mm-category-label">{cat.charAt(0).toUpperCase() + cat.slice(1)}</h2>
+            )}
+            <div className="mm-item-grid">
+              {items.map((item, idx) => {
+                const globalIdx = menuItems.findIndex((m) => m._id === item._id);
+                return (
+                  <div
+                    key={item._id}
+                    className={`mm-item-card ${!item.available ? 'unavailable' : ''}`}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, globalIdx)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, globalIdx)}
+                  >
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.name} className="mm-item-img" />
+                    ) : (
+                      <div className="mm-item-img mm-item-img-placeholder">🍽</div>
+                    )}
+                    <div className="mm-item-body">
+                      <div className="mm-item-name">{item.name}</div>
+                      <div className="mm-item-price">₹{item.price}</div>
+                      <div className="mm-item-cat-tag">{item.category || 'general'}</div>
+                    </div>
+                    <div className="mm-item-footer">
+                      <label className="mm-toggle" title={item.available ? 'Disable' : 'Enable'}>
+                        <input
+                          type="checkbox"
+                          checked={item.available}
+                          disabled={togglingId === item._id}
+                          onChange={() => handleToggle(item)}
+                        />
+                        <span className="mm-toggle-track">
+                          <span className="mm-toggle-thumb" />
+                        </span>
+                        <span className={`mm-avail-label ${item.available ? 'on' : 'off'}`}>
+                          {item.available ? 'Available' : 'Unavailable'}
+                        </span>
+                      </label>
+                      <div className="mm-item-actions">
+                        <button className="mm-edit-btn" onClick={() => setEditingItem(item)}>Edit</button>
+                        <button className="mm-delete-btn" onClick={() => handleDelete(item)}>Delete</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))
+      )}
+
+      {editingItem && (
+        <EditModal
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSaved={() => { setEditingItem(null); fetchMenu(); }}
+        />
+      )}
+    </OwnerLayout>
   );
 };
 

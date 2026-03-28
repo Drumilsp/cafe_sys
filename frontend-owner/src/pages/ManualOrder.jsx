@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
-import './Dashboard.css';
+import OwnerLayout from '../components/OwnerLayout';
+import './ManualOrder.css';
+
+const ALL = 'All';
 
 const ManualOrder = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedItems, setSelectedItems] = useState({});
-  const [searchTerm, setSearchTerm] = useState('');
+  const [cart, setCart] = useState({});
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState(ALL);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('counter');
@@ -17,113 +19,78 @@ const ManualOrder = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        const response = await axios.get('/api/menu?available=true');
-        setMenuItems(response.data.data);
-      } catch (err) {
-        console.error('Failed to fetch menu:', err);
-        setError('Failed to load menu');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMenu();
+    axios.get('/api/menu?available=true')
+      .then((res) => setMenuItems(res.data.data))
+      .catch(() => setError('Failed to load menu'))
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleQuantityChange = (itemId, delta) => {
-    setSelectedItems((prev) => {
-      const current = prev[itemId] || 0;
-      const next = Math.max(current + delta, 0);
-      if (next === 0) {
+  const categories = useMemo(
+    () => [ALL, ...Array.from(new Set(menuItems.map((i) => i.category || 'general')))],
+    [menuItems]
+  );
+
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return menuItems.filter((item) => {
+      const matchCat = activeCategory === ALL || (item.category || 'general') === activeCategory;
+      const matchSearch = !term || item.name.toLowerCase().includes(term);
+      return matchCat && matchSearch;
+    });
+  }, [menuItems, activeCategory, search]);
+
+  const changeQty = (id, delta) => {
+    setCart((prev) => {
+      const next = (prev[id] || 0) + delta;
+      if (next <= 0) {
         const copy = { ...prev };
-        delete copy[itemId];
+        delete copy[id];
         return copy;
       }
-      return { ...prev, [itemId]: next };
+      return { ...prev, [id]: next };
     });
   };
 
-  const handleQuickAdd = (itemId) => {
-    handleQuantityChange(itemId, 1);
-  };
-
-  const filteredMenuItems = menuItems.filter((item) => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return true;
-    return (
-      item.name.toLowerCase().includes(term) ||
-      (item.category || '').toLowerCase().includes(term)
-    );
-  });
-
-  const totalAmount = menuItems.reduce((sum, item) => {
-    const qty = selectedItems[item._id] || 0;
-    return sum + item.price * qty;
-  }, 0);
+  const cartItems = menuItems.filter((i) => cart[i._id]);
+  const total = cartItems.reduce((s, i) => s + i.price * cart[i._id], 0);
+  const cartCount = Object.values(cart).reduce((s, q) => s + q, 0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
     setError('');
     setSuccess('');
 
-    const itemsPayload = Object.entries(selectedItems)
-      .filter(([, qty]) => qty > 0)
-      .map(([menuItemId, quantity]) => ({ menuItemId, quantity }));
-
-    if (itemsPayload.length === 0) {
-      setError('Please select at least one item.');
-      setSubmitting(false);
-      return;
-    }
-
-    if (!customerName.trim()) {
-      setError('Customer name is required.');
-      setSubmitting(false);
-      return;
-    }
-
+    if (cartCount === 0) { setError('Please select at least one item.'); return; }
+    if (!customerName.trim()) { setError('Customer name is required.'); return; }
     if (customerPhone.trim() && !/^[0-9]{10}$/.test(customerPhone.trim())) {
-      setError('Customer phone must be exactly 10 digits when provided.');
-      setSubmitting(false);
+      setError('Phone must be exactly 10 digits when provided.');
       return;
     }
-
     if (serviceType === 'table' && !tableNumber.trim()) {
-      setError('Please enter table number for table delivery.');
-      setSubmitting(false);
+      setError('Please enter a table number for table delivery.');
       return;
     }
 
+    setSubmitting(true);
     try {
       const payload = {
-        items: itemsPayload,
+        items: Object.entries(cart).map(([menuItemId, quantity]) => ({ menuItemId, quantity })),
         paymentMethod,
         customerName: customerName.trim(),
         ...(customerPhone.trim() ? { customerPhone: customerPhone.trim() } : {}),
         serviceType,
         ...(serviceType === 'table' ? { tableNumber: tableNumber.trim() } : {}),
       };
-
-      const response = await axios.post('/api/orders/manual', payload);
-      setSuccess(`Order ${response.data.data.orderId} created successfully.`);
-      setSelectedItems({});
+      const res = await axios.post('/api/orders/manual', payload);
+      setSuccess(`Order ${res.data.data.orderId} created successfully.`);
+      setCart({});
       setCustomerName('');
       setCustomerPhone('');
       setTableNumber('');
     } catch (err) {
-      console.error('Failed to create manual order:', err);
-      const msg =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        'Failed to create manual order';
-      setError(msg);
+      setError(err.response?.data?.message || 'Failed to create order');
     } finally {
       setSubmitting(false);
     }
@@ -131,190 +98,174 @@ const ManualOrder = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-container">
-        <div className="loading">Loading menu...</div>
-      </div>
+      <OwnerLayout title="New Order">
+        <div className="mo-loading">Loading menu…</div>
+      </OwnerLayout>
     );
   }
 
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <div className="header-content">
-          <h1>Create Manual Order</h1>
-          <div className="header-actions">
-            <Link to="/dashboard" className="nav-link">
-              Dashboard
-            </Link>
-            <Link to="/menu" className="nav-link">
-              Manage Menu
-            </Link>
-            <span className="user-name">Welcome, {user?.name}</span>
-            <button onClick={logout} className="logout-btn">
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
+    <OwnerLayout title="New Order">
+      <div className="mo-layout">
+        {/* ── Left: Item picker ── */}
+        <div className="mo-picker">
+          <input
+            className="mo-search"
+            type="text"
+            placeholder="Search items…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-      <div className="container">
-        <form onSubmit={handleSubmit} className="checkout-form">
-          <div className="order-summary">
-            <h2>Select Items</h2>
-            <div className="form-group">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name or category"
-              />
-            </div>
-            {filteredMenuItems.length === 0 ? (
-              <div className="empty-state">No menu items available.</div>
-            ) : (
-              filteredMenuItems.map((item) => {
-                const qty = selectedItems[item._id] || 0;
+          <div className="mo-cat-pills">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                className={`mo-cat-pill ${activeCategory === cat ? 'active' : ''}`}
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="mo-empty">No items found.</div>
+          ) : (
+            <div className="mo-item-grid">
+              {filtered.map((item) => {
+                const qty = cart[item._id] || 0;
                 return (
                   <div
                     key={item._id}
-                    className="summary-item"
-                    onClick={() => handleQuickAdd(item._id)}
+                    className={`mo-item-card ${qty > 0 ? 'selected' : ''}`}
+                    onClick={() => changeQty(item._id, 1)}
                   >
-                    <span>
-                      {item.name} ({item.category}) - ₹{item.price}
-                    </span>
-                    <div className="quantity-controls-menu">
-                      <button
-                        type="button"
-                        className="qty-btn-menu minus"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleQuantityChange(item._id, -1);
-                        }}
-                      >
-                        −
-                      </button>
-                      <span className="quantity-display">{qty}</span>
-                      <button
-                        type="button"
-                        className="qty-btn-menu plus"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleQuantityChange(item._id, 1);
-                        }}
-                      >
-                        +
-                      </button>
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.name} className="mo-item-img" />
+                    ) : (
+                      <div className="mo-item-img mo-item-img-placeholder">🍽</div>
+                    )}
+                    <div className="mo-item-info">
+                      <div className="mo-item-name">{item.name}</div>
+                      <div className="mo-item-price">₹{item.price}</div>
                     </div>
+                    {qty === 0 ? (
+                      <div className="mo-add-hint">Tap to add</div>
+                    ) : (
+                      <div className="mo-item-qty-row" onClick={(e) => e.stopPropagation()}>
+                        <button className="mo-qty-btn sm" onClick={() => changeQty(item._id, -1)}>−</button>
+                        <span className="mo-qty-val">{qty}</span>
+                        <button className="mo-qty-btn sm" onClick={() => changeQty(item._id, 1)}>+</button>
+                      </div>
+                    )}
                   </div>
                 );
-              })
-            )}
-            <div className="summary-total">
-              <span>Total:</span>
-              <span>₹{totalAmount}</span>
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ── Right: Order panel ── */}
+        <form className="mo-panel" onSubmit={handleSubmit}>
+          <div className="mo-panel-title">
+            Order {cartCount > 0 && <span className="mo-cart-badge">{cartCount}</span>}
+          </div>
+
+          {cartItems.length === 0 ? (
+            <div className="mo-panel-empty">No items selected yet.</div>
+          ) : (
+            <div className="mo-order-lines">
+              {cartItems.map((item) => (
+                <div key={item._id} className="mo-order-line">
+                  <span className="mo-line-name">{item.name}</span>
+                  <div className="mo-line-qty">
+                    <button type="button" className="mo-qty-btn sm" onClick={() => changeQty(item._id, -1)}>−</button>
+                    <span className="mo-qty-val">{cart[item._id]}</span>
+                    <button type="button" className="mo-qty-btn sm" onClick={() => changeQty(item._id, 1)}>+</button>
+                  </div>
+                  <span className="mo-line-price">₹{item.price * cart[item._id]}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {cartItems.length > 0 && (
+            <div className="mo-total-row">
+              <span>Total</span>
+              <span>₹{total}</span>
+            </div>
+          )}
+
+          <hr className="mo-divider" />
+
+          <div className="mo-field">
+            <label>Customer Name *</label>
+            <input
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="Enter name"
+            />
+          </div>
+
+          <div className="mo-field">
+            <label>Phone (optional)</label>
+            <input
+              type="tel"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              placeholder="10-digit number"
+              maxLength="10"
+            />
+          </div>
+
+          <div className="mo-radio-group">
+            <span className="mo-radio-label">Payment</span>
+            <div className="mo-radio-row">
+              {[['counter', '💵 Counter'], ['online', '📱 Online']].map(([val, label]) => (
+                <label key={val} className={`mo-radio-btn ${paymentMethod === val ? 'active' : ''}`}>
+                  <input type="radio" name="payment" value={val} checked={paymentMethod === val} onChange={() => setPaymentMethod(val)} />
+                  {label}
+                </label>
+              ))}
             </div>
           </div>
 
-          <div className="payment-section">
-            <h2>Customer Details</h2>
-            <div className="form-group">
-              <label>Customer Name</label>
+          <div className="mo-radio-group">
+            <span className="mo-radio-label">Service</span>
+            <div className="mo-radio-row">
+              {[['counter', '🏪 Counter'], ['table', '🪑 Table']].map(([val, label]) => (
+                <label key={val} className={`mo-radio-btn ${serviceType === val ? 'active' : ''}`}>
+                  <input type="radio" name="service" value={val} checked={serviceType === val} onChange={() => setServiceType(val)} />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {serviceType === 'table' && (
+            <div className="mo-field">
+              <label>Table Number *</label>
               <input
                 type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Enter customer name"
-                required
+                value={tableNumber}
+                onChange={(e) => setTableNumber(e.target.value)}
+                placeholder="e.g. T1, 5"
               />
             </div>
-            <div className="form-group">
-              <label>Customer Phone (optional)</label>
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="10 digit phone number (optional)"
-                maxLength="10"
-                pattern="[0-9]{10}"
-              />
-            </div>
-          </div>
+          )}
 
-          <div className="payment-section">
-            <h2>Payment Method</h2>
-            <div className="payment-options">
-              <label className="payment-option">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="counter"
-                  checked={paymentMethod === 'counter'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                <span>Pay at Counter</span>
-              </label>
-              <label className="payment-option">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="online"
-                  checked={paymentMethod === 'online'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                <span>Pay Online (Mock)</span>
-              </label>
-            </div>
-          </div>
+          {error && <div className="mo-error">{error}</div>}
+          {success && <div className="mo-success">{success}</div>}
 
-          <div className="payment-section">
-            <h2>Delivery / Service</h2>
-            <div className="payment-options">
-              <label className="payment-option">
-                <input
-                  type="radio"
-                  name="serviceType"
-                  value="counter"
-                  checked={serviceType === 'counter'}
-                  onChange={(e) => setServiceType(e.target.value)}
-                />
-                <span>Pick up at Counter</span>
-              </label>
-              <label className="payment-option">
-                <input
-                  type="radio"
-                  name="serviceType"
-                  value="table"
-                  checked={serviceType === 'table'}
-                  onChange={(e) => setServiceType(e.target.value)}
-                />
-                <span>Table Delivery</span>
-              </label>
-            </div>
-            {serviceType === 'table' && (
-              <div className="form-group">
-                <label>Table Number</label>
-                <input
-                  type="text"
-                  value={tableNumber}
-                  onChange={(e) => setTableNumber(e.target.value)}
-                  placeholder="Enter table number"
-                />
-              </div>
-            )}
-          </div>
-
-          {error && <div className="error">{error}</div>}
-          {success && <div className="success">{success}</div>}
-
-          <button type="submit" disabled={submitting} className="btn-primary">
-            {submitting ? 'Creating Order...' : 'Create Order'}
+          <button type="submit" className="mo-submit" disabled={submitting || cartCount === 0}>
+            {submitting ? 'Creating…' : `Place Order${total > 0 ? ` · ₹${total}` : ''}`}
           </button>
         </form>
       </div>
-    </div>
+    </OwnerLayout>
   );
 };
 
 export default ManualOrder;
-

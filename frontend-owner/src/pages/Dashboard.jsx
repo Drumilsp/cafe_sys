@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
+import OwnerLayout from '../components/OwnerLayout';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -18,7 +17,6 @@ const Dashboard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [markingPaidId, setMarkingPaidId] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const { user, logout } = useAuth();
 
   useEffect(() => {
     // Initial load
@@ -189,31 +187,20 @@ const Dashboard = () => {
 
   if (loading && isInitialLoad) {
     return (
-      <div className="dashboard-container">
+      <OwnerLayout title="Dashboard">
         <div className="loading">Loading orders...</div>
-      </div>
+      </OwnerLayout>
     );
   }
 
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <div className="header-content">
-          <h1>Owner Dashboard {isRefreshing && <span className="refresh-indicator">⟳</span>}</h1>
-          <div className="header-actions">
-            <button onClick={() => fetchAllData(false)} className="refresh-btn" title="Refresh">
-              ⟳ Refresh
-            </button>
-            <Link to="/menu" className="nav-link">Manage Menu</Link>
-            <Link to="/manual-order" className="nav-link">Manual Order</Link>
-            <Link to="/history" className="nav-link">History</Link>
-            <span className="user-name">Welcome, {user?.name}</span>
-            <button onClick={logout} className="logout-btn">Logout</button>
-          </div>
-        </div>
-      </header>
-
-      <div className="container">
+    <OwnerLayout title={<>Dashboard {isRefreshing && <span className="refresh-indicator">⟳</span>}</>}>
+      <div className="db-toolbar">
+        <button onClick={() => fetchAllData(false)} className="refresh-btn" title="Refresh">
+          ⟳ Refresh
+        </button>
+      </div>
+      <div>
         <div className="view-toggle">
           <button
             className={viewMode === 'normal' ? 'active' : ''}
@@ -694,7 +681,7 @@ const Dashboard = () => {
         )}
       </div>
 
-    </div>
+    </OwnerLayout>
   );
 };
 

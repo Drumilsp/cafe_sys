@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MenuManagement from './pages/MenuManagement';
+import AddMenuItem from './pages/AddMenuItem';
 import ManualOrder from './pages/ManualOrder';
 import OrderHistory from './pages/OrderHistory';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -28,6 +29,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MenuManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/menu/add"
+              element={
+                <ProtectedRoute>
+                  <AddMenuItem />
                 </ProtectedRoute>
               }
             />
