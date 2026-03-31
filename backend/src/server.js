@@ -3,21 +3,28 @@ const connectDB = require('./config/db');
 const ensureDefaultOwner = require('./utils/ensureDefaultOwner');
 const app = require('./app');
 
-const PORT = process.env.PORT || 5000;
+// Use port 3000 for Fly.io
+const PORT = process.env.PORT || 3000;
 
 (async () => {
   try {
-    await connectDB();
-    await ensureDefaultOwner();
+    console.log("Starting server...");
 
-    app.listen(PORT, () => {
-      // eslint-disable-next-line no-console
+    // Connect to database
+    await connectDB();
+    console.log("Database connected");
+
+    // Ensure default data
+    await ensureDefaultOwner();
+    console.log("Default owner ensured");
+
+    // Start server (important: 0.0.0.0)
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on port ${PORT}`);
     });
+
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Failed to start server:', error);
+    console.error("Failed to start server:", error);
     process.exit(1);
   }
 })();
-
