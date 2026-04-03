@@ -561,6 +561,23 @@ exports.getAllOrders = async (req, res) => {
       ];
     }
 
+    // Exclude online orders that are still in 'pending' status (customer hasn't confirmed payment yet)
+    if (req.query.excludeOnlinePending === '1' || req.query.excludeOnlinePending === 'true') {
+      const existingOr = filter.$or;
+      const onlinePendingCondition = {
+        $or: [
+          { paymentMethod: { $ne: 'online' } },
+          { orderStatus: { $ne: 'pending' } },
+        ],
+      };
+      if (existingOr) {
+        filter.$and = [{ $or: existingOr }, onlinePendingCondition];
+        delete filter.$or;
+      } else {
+        filter.$or = onlinePendingCondition.$or;
+      }
+    }
+
     // Optional: limit to today's orders
     if (req.query.todayOnly === '1' || req.query.todayOnly === 'true') {
       const now = new Date();

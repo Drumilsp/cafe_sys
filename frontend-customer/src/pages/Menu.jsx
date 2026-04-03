@@ -11,6 +11,8 @@ const Menu = () => {
   const [filteredItems, setFilteredItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOption, setSortOption] = useState('default'); // 'default' | 'price_asc' | 'price_desc' | 'name_asc'
   const [loading, setLoading] = useState(true);
   const [addedItems, setAddedItems] = useState(new Set());
   const [animatingItem, setAnimatingItem] = useState(null);
@@ -29,14 +31,17 @@ const Menu = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedCategory === 'all') {
-      setFilteredItems(menuItems.filter((item) => item.available));
-    } else {
-      setFilteredItems(
-        menuItems.filter((item) => item.available && item.category === selectedCategory)
-      );
+    let base = menuItems.filter((item) => item.available);
+    if (selectedCategory !== 'all') base = base.filter((item) => item.category === selectedCategory);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      base = base.filter((item) => item.name.toLowerCase().includes(q));
     }
-  }, [selectedCategory, menuItems]);
+    if (sortOption === 'price_asc') base = [...base].sort((a, b) => a.price - b.price);
+    else if (sortOption === 'price_desc') base = [...base].sort((a, b) => b.price - a.price);
+    else if (sortOption === 'name_asc') base = [...base].sort((a, b) => a.name.localeCompare(b.name));
+    setFilteredItems(base);
+  }, [selectedCategory, menuItems, searchQuery, sortOption]);
 
   const fetchMenu = async () => {
     try {
@@ -144,6 +149,27 @@ const Menu = () => {
       </header>
       {user && <p className="welcome-text">Welcome, {user.name}!</p>}
       <div className="container">
+        <div className="menu-search-bar">
+          <input
+            type="text"
+            className="menu-search-input"
+            placeholder="Search items…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search menu items"
+          />
+          <select
+            className="menu-sort-select"
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            aria-label="Sort menu items"
+          >
+            <option value="default">Default</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="name_asc">Name: A–Z</option>
+          </select>
+        </div>
         <div className="category-filter">
           {categories.map((category) => (
             <button
@@ -158,7 +184,9 @@ const Menu = () => {
 
         <div className="menu-grid">
           {filteredItems.length === 0 ? (
-            <div className="empty-state">No items available in this category</div>
+            <div className="empty-state">
+              {searchQuery ? `No items found for "${searchQuery}"` : 'No items available in this category'}
+            </div>
           ) : (
             filteredItems.map((item, index) => (
               <div 
