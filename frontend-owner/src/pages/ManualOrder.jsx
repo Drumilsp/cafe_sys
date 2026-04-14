@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import OwnerLayout from '../components/OwnerLayout';
+import { ENABLE_PAYMENT } from '../config/payment';
 import './ManualOrder.css';
 
 const ALL = 'All';
@@ -77,7 +78,7 @@ const ManualOrder = () => {
     try {
       const payload = {
         items: Object.entries(cart).map(([menuItemId, quantity]) => ({ menuItemId, quantity })),
-        paymentMethod,
+        paymentMethod: ENABLE_PAYMENT ? paymentMethod : 'counter',
         customerName: customerName.trim(),
         ...(customerPhone.trim() ? { customerPhone: customerPhone.trim() } : {}),
         serviceType,
@@ -220,17 +221,19 @@ const ManualOrder = () => {
             />
           </div>
 
-          <div className="mo-radio-group">
-            <span className="mo-radio-label">Payment</span>
-            <div className="mo-radio-row">
-              {[['counter', '💵 Counter'], ['online', '📱 Online']].map(([val, label]) => (
-                <label key={val} className={`mo-radio-btn ${paymentMethod === val ? 'active' : ''}`}>
-                  <input type="radio" name="payment" value={val} checked={paymentMethod === val} onChange={() => setPaymentMethod(val)} />
-                  {label}
-                </label>
-              ))}
+          {ENABLE_PAYMENT && (
+            <div className="mo-radio-group">
+              <span className="mo-radio-label">Payment</span>
+              <div className="mo-radio-row">
+                {[['counter', '💵 Counter'], ['online', '📱 Online']].map(([val, label]) => (
+                  <label key={val} className={`mo-radio-btn ${paymentMethod === val ? 'active' : ''}`}>
+                    <input type="radio" name="payment" value={val} checked={paymentMethod === val} onChange={() => setPaymentMethod(val)} />
+                    {label}
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="mo-radio-group">
             <span className="mo-radio-label">Service</span>

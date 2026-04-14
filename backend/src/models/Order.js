@@ -53,7 +53,7 @@ const orderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ['pending', 'verifying_payment', 'preparing', 'ready', 'delivered'],
+      enum: ['pending', 'verifying_payment', 'preparing', 'ready', 'delivered', 'collect_payment'],
       default: 'pending',
     },
     serviceType: {

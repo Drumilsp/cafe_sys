@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import QRCode from 'qrcode';
+import { ENABLE_PAYMENT } from '../config/payment';
 import './PayOnline.css';
 import bhim from '../assets/bhim.png' 
 import gpay from '../assets/gpay.png' 
@@ -61,6 +62,13 @@ const PayOnline = () => {
   const genericUpiLink = useMemo(() => (upiParams ? `upi://pay?${upiParams}` : ''), [upiParams]);
 
   useEffect(() => {
+    if (!ENABLE_PAYMENT) {
+      navigate(`/order-confirmation/${orderId}`, { replace: true });
+    }
+  }, [navigate, orderId]);
+
+  useEffect(() => {
+    if (!ENABLE_PAYMENT) return;
     const fetchOrder = async () => {
       setLoading(true);
       setError('');
@@ -77,6 +85,7 @@ const PayOnline = () => {
   }, [orderId]);
 
   useEffect(() => {
+    if (!ENABLE_PAYMENT) return;
     const run = async () => {
       if (!genericUpiLink) return;
       try {
@@ -88,6 +97,10 @@ const PayOnline = () => {
     };
     run();
   }, [genericUpiLink]);
+
+  if (!ENABLE_PAYMENT) {
+    return null;
+  }
 
   const handlePaid = async () => {
     try {

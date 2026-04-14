@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import OwnerLayout from '../components/OwnerLayout';
+import { ENABLE_PAYMENT } from '../config/payment';
 import './OrderHistory.css';
 
 const STATUS_COLORS = {
@@ -9,6 +10,7 @@ const STATUS_COLORS = {
   preparing: '#0ea5e9',
   ready: '#22c55e',
   delivered: '#6b7280',
+  collect_payment: '#6b7280',
 };
 
 const fmt = (d) =>
@@ -101,7 +103,7 @@ const OrderHistory = () => {
                         className="oh-status-badge"
                         style={{ background: STATUS_COLORS[order.orderStatus] || '#6b7280' }}
                       >
-                        {order.orderStatus.replace('_', ' ')}
+                        {formatStatus(order.orderStatus)}
                       </span>
                     </div>
 
@@ -118,7 +120,11 @@ const OrderHistory = () => {
                       <span className="oh-total">₹{order.totalAmount}</span>
                       <span className="oh-pay-info">
                         {order.paymentMethod === 'online' ? 'Online' : 'Counter'} ·{' '}
-                        {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                        {!ENABLE_PAYMENT && order.orderStatus === 'delivered'
+                          ? 'Collect Payment Pending'
+                          : order.paymentStatus === 'paid'
+                            ? 'Paid'
+                            : 'Pending'}
                         {order.serviceType === 'table' && order.tableNumber
                           ? ` · Table ${order.tableNumber}` : ''}
                       </span>
@@ -135,3 +141,8 @@ const OrderHistory = () => {
 };
 
 export default OrderHistory;
+const formatStatus = (status) => {
+  if (status === 'verifying_payment') return 'Verifying Payment';
+  if (status === 'collect_payment') return 'Collect Payment';
+  return status.replace('_', ' ');
+};

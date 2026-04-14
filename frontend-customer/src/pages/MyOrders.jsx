@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
+import { ENABLE_PAYMENT } from '../config/payment';
 import './MyOrders.css';
 
 const MyOrders = () => {
@@ -31,32 +32,45 @@ const MyOrders = () => {
   const getStatusColor = (status) => {
     const colors = {
       pending: '#ffc107',
-      verifying_payment: '#6f42c1',
       preparing: '#17a2b8',
       ready: '#28a745',
       delivered: '#6c757d',
+      collect_payment: '#6c757d',
     };
+    if (ENABLE_PAYMENT) {
+      colors.verifying_payment = '#6f42c1';
+    }
     return colors[status] || '#6c757d';
   };
 
   const getStatusIndex = (status) => {
-    const order = ['pending', 'verifying_payment', 'preparing', 'ready', 'delivered'];
+    const order = ENABLE_PAYMENT
+      ? ['pending', 'verifying_payment', 'preparing', 'ready', 'delivered']
+      : ['pending', 'preparing', 'ready', 'delivered'];
+    if (status === 'collect_payment') {
+      return order.length - 1;
+    }
     return order.indexOf(status);
   };
 
   const getStatusLabel = (status) => {
     const map = {
       pending: 'Pending',
-      verifying_payment: 'Verifying Payment',
       preparing: 'Preparing',
       ready: 'Ready',
       delivered: 'Delivered',
+      collect_payment: 'Payment Collected',
     };
+    if (ENABLE_PAYMENT) {
+      map.verifying_payment = 'Verifying Payment';
+    }
     return map[status] || status;
   };
 
   const renderProgress = (status) => {
-    const steps = ['Pending', 'Verifying Payment', 'Preparing', 'Ready', 'Delivered'];
+    const steps = ENABLE_PAYMENT
+      ? ['Pending', 'Verifying Payment', 'Preparing', 'Ready', 'Delivered']
+      : ['Pending', 'Preparing', 'Ready', 'Delivered'];
     const currentIndex = getStatusIndex(status);
 
     return (
@@ -174,7 +188,11 @@ const MyOrders = () => {
                     <span>₹{order.totalAmount}</span>
                   </div>
                   <div className="payment-method">
-                    {order.paymentMethod === 'online' ? 'Paid Online' : 'Pay at Counter'}
+                    {!ENABLE_PAYMENT && ['delivered', 'collect_payment'].includes(order.orderStatus)
+                      ? '💰 Pay at Counter'
+                      : order.paymentMethod === 'online'
+                        ? 'Paid Online'
+                        : 'Pay at Counter'}
                   </div>
                   <button
                     type="button"

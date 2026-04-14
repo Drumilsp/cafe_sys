@@ -3,6 +3,8 @@ const Menu = require('../models/Menu');
 const User = require('../models/User');
 const { v4: uuidv4 } = require('uuid');
 
+const isPaymentEnabled = () => String(process.env.ENABLE_PAYMENT ?? 'true').toLowerCase() === 'true';
+
 const normalizeStatusValue = (status) => {
   if (status === 'completed') return 'delivered';
   return status;
@@ -136,7 +138,9 @@ const normalizeServiceDetails = (body) => {
  */
 exports.createOrder = async (req, res) => {
   try {
-    const { items, paymentMethod } = req.body;
+    const { items } = req.body;
+    const paymentEnabled = isPaymentEnabled();
+    const paymentMethod = paymentEnabled ? req.body.paymentMethod : 'counter';
 
     // Validation
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -228,7 +232,7 @@ exports.createOrder = async (req, res) => {
           totalAmount,
           paymentMethod,
           paymentStatus: 'pending',
-          orderStatus: paymentMethod === 'online' ? 'pending' : 'pending',
+          orderStatus: 'pending',
           serviceType: serviceDetails.serviceType,
           tableNumber: serviceDetails.tableNumber,
         });
@@ -315,7 +319,9 @@ exports.createOrder = async (req, res) => {
  */
 exports.createManualOrder = async (req, res) => {
   try {
-    const { items, paymentMethod, customerName, customerPhone } = req.body;
+    const { items, customerName, customerPhone } = req.body;
+    const paymentEnabled = isPaymentEnabled();
+    const paymentMethod = paymentEnabled ? req.body.paymentMethod : 'counter';
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
@@ -528,7 +534,7 @@ exports.getMyOrders = async (req, res) => {
  * GET /api/orders
  * Get all orders (Owner only)
  * Query params: 
- *   ?status=pending|verifying_payment|preparing|ready|delivered
+ *   ?status=pending|verifying_payment|preparing|ready|delivered|collect_payment
  *   ?paymentMethod=online|counter
  *   ?paymentStatus=pending|paid
  *   ?sortBy=time|price|volume (default: time)
@@ -646,14 +652,14 @@ exports.getAllOrders = async (req, res) => {
 /**
  * PATCH /api/orders/:id/status
  * Update order status (Owner only)
- * Body: { orderStatus: 'pending'|'verifying_payment'|'preparing'|'ready'|'delivered' }
+ * Body: { orderStatus: 'pending'|'verifying_payment'|'preparing'|'ready'|'delivered'|'collect_payment' }
  */
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { orderStatus } = req.body;
 
-    const validStatuses = ['pending', 'verifying_payment', 'preparing', 'ready', 'delivered'];
+    const validStatuses = ['pending', 'verifying_payment', 'preparing', 'ready', 'delivered', 'collect_payment'];
     const normalizedRequested = normalizeStatusValue(orderStatus);
     if (!orderStatus || !validStatuses.includes(normalizedRequested)) {
       return res.status(400).json({
@@ -675,8 +681,18 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
+    if (!isPaymentEnabled() && normalizedRequested === 'verifying_payment') {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'verifying_payment is not available when payment is disabled',
+      });
+    }
+
     // Update order status
     order.orderStatus = normalizedRequested;
+    if (normalizedRequested === 'collect_payment') {
+      order.paymentStatus = 'paid';
+    }
     await order.save();
 
     // Populate and return
@@ -730,6 +746,8 @@ exports.updateOrderPayment = async (req, res) => {
     // When owner marks Paid, order should move to Preparing immediately
     if (order.orderStatus === 'pending') {
       order.orderStatus = 'preparing';
+    } else if (order.orderStatus === 'delivered') {
+      order.orderStatus = 'collect_payment';
     }
     await order.save();
 
@@ -844,6 +862,13 @@ exports.customerMarkedPaid = async (req, res) => {
       return res.status(400).json({
         status: 'fail',
         message: 'This order is not an online payment order',
+      });
+    }
+
+    if (!isPaymentEnabled()) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Online payment is disabled',
       });
     }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import { ENABLE_PAYMENT } from '../config/payment';
 import './OrderConfirmation.css';
 
 const OrderConfirmation = () => {
@@ -26,23 +27,33 @@ const OrderConfirmation = () => {
   };
 
   const getStatusIndex = (status) => {
-    const order = ['pending', 'verifying_payment', 'preparing', 'ready', 'delivered'];
+    const order = ENABLE_PAYMENT
+      ? ['pending', 'verifying_payment', 'preparing', 'ready', 'delivered']
+      : ['pending', 'preparing', 'ready', 'delivered'];
+    if (status === 'collect_payment') {
+      return order.length - 1;
+    }
     return order.indexOf(status);
   };
 
   const getStatusLabel = (status) => {
     const map = {
       pending: 'Pending',
-      verifying_payment: 'Verifying Payment',
       preparing: 'Preparing',
       ready: 'Ready',
       delivered: 'Delivered',
+      collect_payment: 'Payment Collected',
     };
+    if (ENABLE_PAYMENT) {
+      map.verifying_payment = 'Verifying Payment';
+    }
     return map[status] || status;
   };
 
   const renderProgress = (status) => {
-    const steps = ['Pending', 'Verifying Payment', 'Preparing', 'Ready', 'Delivered'];
+    const steps = ENABLE_PAYMENT
+      ? ['Pending', 'Verifying Payment', 'Preparing', 'Ready', 'Delivered']
+      : ['Pending', 'Preparing', 'Ready', 'Delivered'];
     const currentIndex = getStatusIndex(status);
 
     return (
@@ -87,9 +98,12 @@ const OrderConfirmation = () => {
       preparing: '#17a2b8',
       ready: '#28a745',
       delivered: '#6c757d',
+      collect_payment: '#6c757d',
     };
     return colors[status] || '#6c757d';
   };
+
+  const showPayAtCounter = !ENABLE_PAYMENT && order.paymentMethod === 'counter' && ['delivered', 'collect_payment'].includes(order.orderStatus);
 
   return (
     <div className="confirmation-container">
@@ -130,10 +144,18 @@ const OrderConfirmation = () => {
               <span>Payment Method:</span>
               <span>{order.paymentMethod === 'online' ? 'Online' : 'Pay at Counter'}</span>
             </div>
-            <div className="payment-info">
-              <span>Payment Status:</span>
-              <span>{order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}</span>
-            </div>
+            {ENABLE_PAYMENT && (
+              <div className="payment-info">
+                <span>Payment Status:</span>
+                <span>{order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}</span>
+              </div>
+            )}
+            {showPayAtCounter && (
+              <div className="payment-info">
+                <span>Payment:</span>
+                <span>💰 Pay at Counter</span>
+              </div>
+            )}
           </div>
 
           <div className="actions">

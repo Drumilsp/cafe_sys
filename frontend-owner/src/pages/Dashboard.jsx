@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import OwnerLayout from '../components/OwnerLayout';
+import { ENABLE_PAYMENT } from '../config/payment';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -36,25 +37,30 @@ const Dashboard = () => {
     }
 
     try {
-      // Pay-at-counter unpaid orders
-      const counterRes = await axios.get('/api/orders?paymentMethod=counter&paymentStatus=pending&sortBy=time&sortOrder=desc');
-      setPayAtCounterOrders(counterRes.data.data);
-
-      // Active orders (exclude counter-unpaid AND online-pending)
       const params = new URLSearchParams();
-      params.append('excludeCounterUnpaid', '1');
-      params.append('excludeOnlinePending', '1');
       params.append('todayOnly', '1');
+      if (ENABLE_PAYMENT) {
+        params.append('excludeCounterUnpaid', '1');
+        params.append('excludeOnlinePending', '1');
+      }
       if (statusFilter !== 'all') params.append('status', statusFilter);
       if (paymentFilter !== 'all') params.append('paymentMethod', paymentFilter);
       params.append('sortBy', sortBy);
       params.append('sortOrder', sortOrder);
-      const res = await axios.get(`/api/orders?${params.toString()}`);
-      // Filter out delivered from active list
-      setOrders((res.data.data || []).filter(o => o.orderStatus !== 'delivered'));
+      const [res, completedRes, counterRes] = await Promise.all([
+        axios.get(`/api/orders?${params.toString()}`),
+        axios.get(`/api/orders?status=${ENABLE_PAYMENT ? 'delivered' : 'collect_payment'}&sortBy=time&sortOrder=desc`),
+        ENABLE_PAYMENT
+          ? axios.get('/api/orders?paymentMethod=counter&paymentStatus=pending&sortBy=time&sortOrder=desc')
+          : Promise.resolve({ data: { data: [] } }),
+      ]);
 
-      // Completed (delivered) orders — most recent first
-      const completedRes = await axios.get('/api/orders?status=delivered&sortBy=time&sortOrder=desc');
+      setPayAtCounterOrders(counterRes.data.data || []);
+      setOrders(
+        (res.data.data || []).filter((o) =>
+          ENABLE_PAYMENT ? o.orderStatus !== 'delivered' : o.orderStatus !== 'collect_payment'
+        )
+      );
       setCompletedOrders(completedRes.data.data || []);
 
     } catch (error) {
@@ -99,17 +105,25 @@ const Dashboard = () => {
       preparing: '#17a2b8',
       ready: '#28a745',
       delivered: '#6c757d',
+      collect_payment: '#6c757d',
     };
     return colors[status] || '#6c757d';
   };
 
   const getNextStatus = (currentStatus) => {
-    const statusFlow = {
-      pending: 'preparing',
-      verifying_payment: 'preparing',
-      preparing: 'ready',
-      ready: 'delivered',
-    };
+    const statusFlow = ENABLE_PAYMENT
+      ? {
+          pending: 'preparing',
+          verifying_payment: 'preparing',
+          preparing: 'ready',
+          ready: 'delivered',
+        }
+      : {
+          pending: 'preparing',
+          preparing: 'ready',
+          ready: 'delivered',
+          delivered: 'collect_payment',
+        };
     return statusFlow[currentStatus];
   };
 
@@ -186,6 +200,12 @@ const Dashboard = () => {
     (o) => o.orderStatus === 'pending' || o.orderStatus === 'verifying_payment' || o.orderStatus === 'preparing'
   );
 
+  const getDisplayStatusLabel = (status) => {
+    if (status === 'verifying_payment') return 'Verifying Payment';
+    if (status === 'collect_payment') return 'Collect Payment';
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
   if (loading && isInitialLoad) {
     return (
       <OwnerLayout title="Dashboard">
@@ -226,7 +246,7 @@ const Dashboard = () => {
         )}
 
         {/* ── PAY AT COUNTER SECTION ── */}
-        {viewMode === 'normal' && activeTab === 'active' && payAtCounterOrders.length > 0 && (
+        {ENABLE_PAYMENT && viewMode === 'normal' && activeTab === 'active' && payAtCounterOrders.length > 0 && (
           <section className="pay-at-counter-section">
             <h2 className="section-title">
               <span className="section-icon">💰</span> Pay at Counter — Collect Payment First
@@ -295,21 +315,26 @@ const Dashboard = () => {
             <div className="filter-group">
               <label className="filter-label">Status:</label>
               <div className="filter-tabs">
-                {['all', 'pending', 'preparing', 'ready', 'verifying_payment'].map((s) => (
+                {(ENABLE_PAYMENT
+                  ? ['all', 'pending', 'preparing', 'ready', 'verifying_payment']
+                  : ['all', 'pending', 'preparing', 'ready', 'delivered']
+                ).map((s) => (
                   <button key={s} onClick={() => setStatusFilter(s)} className={statusFilter === s ? 'active' : ''}>
-                    {s === 'all' ? 'All' : s === 'verifying_payment' ? 'Verifying Payment' : s.charAt(0).toUpperCase() + s.slice(1)}
+                    {s === 'all' ? 'All' : getDisplayStatusLabel(s)}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="filter-group">
-              <label className="filter-label">Payment:</label>
-              <div className="filter-tabs">
-                {[['all', 'All'], ['counter', 'Pay at Counter'], ['online', 'Online Paid']].map(([val, label]) => (
-                  <button key={val} onClick={() => setPaymentFilter(val)} className={paymentFilter === val ? 'active' : ''}>{label}</button>
-                ))}
+            {ENABLE_PAYMENT && (
+              <div className="filter-group">
+                <label className="filter-label">Payment:</label>
+                <div className="filter-tabs">
+                  {[['all', 'All'], ['counter', 'Pay at Counter'], ['online', 'Online Paid']].map(([val, label]) => (
+                    <button key={val} onClick={() => setPaymentFilter(val)} className={paymentFilter === val ? 'active' : ''}>{label}</button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
             <div className="filter-group">
               <label className="filter-label">Sort By:</label>
               <div className="sort-controls">
@@ -343,8 +368,8 @@ const Dashboard = () => {
                       <p className="order-time">{new Date(order.createdAt).toLocaleString()}</p>
                     </div>
                     <span className="status-badge" style={{ backgroundColor: getStatusColor(order.orderStatus) }}>
-                      {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
-                    </span>
+                {getDisplayStatusLabel(order.orderStatus)}
+              </span>
                   </div>
                   <div className="order-items">
                     {order.items.map((item, index) => (
@@ -364,23 +389,26 @@ const Dashboard = () => {
                     </div>
                     <div className="payment-info">
                       <span>Payment:</span>
-                      <span className={order.paymentMethod === 'counter' && order.paymentStatus === 'pending' ? 'payment-warning' : ''}>
+                      <span className={ENABLE_PAYMENT && order.paymentMethod === 'counter' && order.paymentStatus === 'pending' ? 'payment-warning' : ''}>
                         {order.paymentMethod === 'online' ? 'Online' : 'Counter'} — {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
                       </span>
-                      {order.paymentMethod === 'counter' && order.paymentStatus === 'pending' && (
+                      {!ENABLE_PAYMENT && order.orderStatus === 'delivered' && (
+                        <span className="counter-badge">💰 Collect Payment</span>
+                      )}
+                      {ENABLE_PAYMENT && order.paymentMethod === 'counter' && order.paymentStatus === 'pending' && (
                         <span className="counter-badge">💰 Collect Payment</span>
                       )}
                     </div>
                   </div>
-                  {order.orderStatus === 'verifying_payment' && (
+                  {ENABLE_PAYMENT && order.orderStatus === 'verifying_payment' && (
                     <div className="order-actions">
                       <button onClick={() => updateOrderStatus(order._id, 'preparing')} className="status-btn">Verify Payment</button>
                     </div>
                   )}
-                  {order.orderStatus !== 'delivered' && order.orderStatus !== 'verifying_payment' && (
+                  {getNextStatus(order.orderStatus) && (!ENABLE_PAYMENT || order.orderStatus !== 'verifying_payment') && (
                     <div className="order-actions">
                       <button onClick={() => updateOrderStatus(order._id, getNextStatus(order.orderStatus))} className="status-btn">
-                        Mark as {getNextStatus(order.orderStatus)?.charAt(0).toUpperCase() + getNextStatus(order.orderStatus)?.slice(1)}
+                        Mark as {getDisplayStatusLabel(getNextStatus(order.orderStatus))}
                       </button>
                     </div>
                   )}
@@ -453,7 +481,7 @@ const Dashboard = () => {
                         <p className="order-time">{new Date(order.createdAt).toLocaleString()}</p>
                       </div>
                       <span className="status-badge" style={{ backgroundColor: getStatusColor(order.orderStatus) }}>
-                        Delivered
+                        {getDisplayStatusLabel(order.orderStatus)}
                       </span>
                     </div>
                     <div className="order-items">
@@ -470,7 +498,7 @@ const Dashboard = () => {
                         <span>₹{order.totalAmount}</span>
                       </div>
                       <div className="payment-info">
-                        <span>{order.paymentMethod === 'online' ? 'Online' : 'Counter'} — Paid</span>
+                        <span>{order.paymentMethod === 'online' ? 'Online' : 'Counter'} — {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}</span>
                       </div>
                     </div>
                   </div>
@@ -497,7 +525,7 @@ const Dashboard = () => {
                         {order.tableNumber && <p className="kitchen-table">Table: {order.tableNumber}</p>}
                       </div>
                       <span className="status-badge" style={{ backgroundColor: getStatusColor(order.orderStatus) }}>
-                        {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
+                        {getDisplayStatusLabel(order.orderStatus)}
                       </span>
                     </div>
                     <div className="kitchen-items">
@@ -512,7 +540,7 @@ const Dashboard = () => {
                       ))}
                     </div>
                     <div className="kitchen-actions">
-                      {order.orderStatus === 'verifying_payment' && (
+                      {ENABLE_PAYMENT && order.orderStatus === 'verifying_payment' && (
                         <button className="kitchen-btn start" onClick={() => updateOrderStatus(order._id, 'preparing')}>Verify Payment</button>
                       )}
                       {order.orderStatus === 'pending' && (

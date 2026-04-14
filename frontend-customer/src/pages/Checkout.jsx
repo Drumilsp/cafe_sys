@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
+import { ENABLE_PAYMENT } from '../config/payment';
 import './Checkout.css';
 
 const Checkout = () => {
@@ -64,7 +65,7 @@ const Checkout = () => {
             quantity: item.quantity,
           };
         }),
-        paymentMethod,
+        paymentMethod: ENABLE_PAYMENT ? paymentMethod : 'counter',
         serviceType,
         ...(serviceType === 'table' ? { tableNumber: tableNumber.trim() } : {}),
       };
@@ -73,7 +74,7 @@ const Checkout = () => {
       const response = await axios.post('/api/orders', orderData);
       clearCart();
       const created = response.data.data;
-      if (paymentMethod === 'online') {
+      if (ENABLE_PAYMENT && paymentMethod === 'online') {
         navigate(`/pay-online/${created.orderId}`);
       } else {
         navigate(`/order-confirmation/${created.orderId}`);
@@ -113,31 +114,33 @@ const Checkout = () => {
             </div>
           </div>
 
-          <div className="payment-section">
-            <h2>Payment Method</h2>
-            <div className="payment-options">
-              <label className="payment-option">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="counter"
-                  checked={paymentMethod === 'counter'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                <span>Pay at Counter</span>
-              </label>
-              <label className="payment-option">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="online"
-                  checked={paymentMethod === 'online'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                <span>Pay Online</span>
-              </label>
+          {ENABLE_PAYMENT && (
+            <div className="payment-section">
+              <h2>Payment Method</h2>
+              <div className="payment-options">
+                <label className="payment-option">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="counter"
+                    checked={paymentMethod === 'counter'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
+                  <span>Pay at Counter</span>
+                </label>
+                <label className="payment-option">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="online"
+                    checked={paymentMethod === 'online'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
+                  <span>Pay Online</span>
+                </label>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="payment-section">
             <h2>Delivery / Service</h2>
