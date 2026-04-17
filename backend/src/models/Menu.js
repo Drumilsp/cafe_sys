@@ -22,6 +22,10 @@ const menuSchema = new mongoose.Schema(
       default: 'general',
       trim: true,
     },
+    isVeg: {
+      type: Boolean,
+      default: true,
+    },
     imageUrl: {
       type: String,
       default: '',

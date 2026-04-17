@@ -5,6 +5,20 @@ import { useCart } from '../context/CartContext';
 import { ENABLE_PAYMENT } from '../config/payment';
 import './Checkout.css';
 
+const compareTableNames = (a, b) => {
+  const aStartsWithDigit = /^\d/.test(a.name || '');
+  const bStartsWithDigit = /^\d/.test(b.name || '');
+
+  if (aStartsWithDigit !== bStartsWithDigit) {
+    return aStartsWithDigit ? -1 : 1;
+  }
+
+  return String(a.name || '').localeCompare(String(b.name || ''), undefined, {
+    numeric: true,
+    sensitivity: 'base',
+  });
+};
+
 const Checkout = () => {
   const { cartItems, getTotalPrice, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState('counter');
@@ -24,7 +38,7 @@ const Checkout = () => {
       setTablesError('');
       try {
         const res = await axios.get('/api/tables');
-        setTables(res.data.data || []);
+        setTables((res.data.data || []).slice().sort(compareTableNames));
       } catch (err) {
         console.error('Failed to load tables:', err);
         setTablesError('Unable to load available tables right now.');
@@ -86,7 +100,7 @@ const Checkout = () => {
       if (serviceType === 'table') {
         try {
           const res = await axios.get('/api/tables');
-          setTables(res.data.data || []);
+          setTables((res.data.data || []).slice().sort(compareTableNames));
         } catch (reloadErr) {
           console.error('Failed to refresh tables after checkout error:', reloadErr);
         }

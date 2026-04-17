@@ -4,7 +4,8 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "update:veg": "node src/scripts/updateveg.js"
   },
   "keywords": [],
   "author": "",

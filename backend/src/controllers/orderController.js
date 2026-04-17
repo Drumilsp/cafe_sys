@@ -21,43 +21,46 @@ const normalizeOrderForResponse = (order) => {
   return order;
 };
 
+const ORDER_ITEM_POPULATE_FIELDS = 'name price imageUrl available isVeg';
+
+const findOrderByIdentifier = async (id) => {
+  let order = await Order.findOne({ orderId: id });
+  if (!order) {
+    order = await Order.findById(id);
+  }
+  return order;
+};
+
+const isOrderEditable = (order) => !['delivered', 'collect_payment'].includes(order.orderStatus);
+
 /**
  * Generate unique order ID with daily reset counter (e.g., ORD-20240216-0001)
  */
-const generateOrderId = async () => {
+const generateOrderId = async (attemptOffset = 0) => {
   try {
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
-    
-    // Find the highest order number for today
-    const todayStart = new Date(now);
-    todayStart.setHours(0, 0, 0, 0);
-    
-    const todayEnd = new Date(now);
-    todayEnd.setHours(23, 59, 59, 999);
-    
-    // Find all orders from today with the new format (ORD-YYYYMMDD-NNNN)
-    // Use startsWith to find orders matching today's date pattern
-    const todayOrders = await Order.find({
-      createdAt: {
-        $gte: todayStart,
-        $lte: todayEnd,
-      },
+
+    // Since the numeric part is zero-padded, sorting by orderId descending
+    // gives us the highest sequence for the day without relying on createdAt.
+    const latestOrder = await Order.findOne({
       orderId: { $regex: `^ORD-${dateStr}-\\d{4}$` },
-    }).sort({ createdAt: -1 }).limit(1);
-    
-    // Get the next sequence number
+    })
+      .sort({ orderId: -1 })
+      .select('orderId');
+
     let nextNumber = 1;
-    if (todayOrders.length > 0) {
-      // Extract number from last order ID (format: ORD-YYYYMMDD-NNNN)
-      const lastOrderId = todayOrders[0].orderId;
+    if (latestOrder?.orderId) {
+      const lastOrderId = latestOrder.orderId;
       const match = lastOrderId.match(/-(\d{4})$/);
       if (match) {
         const lastNumber = parseInt(match[1], 10);
         nextNumber = lastNumber + 1;
       }
     }
-    
+
+    nextNumber += attemptOffset;
+
     // Ensure we don't exceed 9999 orders per day
     if (nextNumber > 9999) {
       throw new Error('Maximum orders per day (9999) exceeded');
@@ -205,43 +208,13 @@ exports.createOrder = async (req, res) => {
     }
 
     // Generate unique order ID with daily reset counter (retry on conflict)
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
-    const todayStart = new Date(now);
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(now);
-    todayEnd.setHours(23, 59, 59, 999);
-    
     let attempts = 0;
     const maxAttempts = 10;
     
     // Try to create order with retry logic
     while (attempts < maxAttempts) {
       try {
-        // Query for the latest order ID each time to handle race conditions
-        const todayOrders = await Order.find({
-          createdAt: { $gte: todayStart, $lte: todayEnd },
-          orderId: { $regex: `^ORD-${dateStr}-\\d{4}$` },
-        }).sort({ createdAt: -1 }).limit(1);
-        
-        // Calculate next number
-        let nextNumber = 1;
-        if (todayOrders.length > 0) {
-          const lastOrderId = todayOrders[0].orderId;
-          const match = lastOrderId.match(/-(\d{4})$/);
-          if (match) {
-            nextNumber = parseInt(match[1], 10) + 1;
-          }
-        }
-        
-        // Add attempt offset to handle concurrent requests
-        nextNumber += attempts;
-        
-        if (nextNumber > 9999) {
-          throw new Error('Maximum orders per day (9999) exceeded');
-        }
-        
-        const orderId = `ORD-${dateStr}-${nextNumber.toString().padStart(4, '0')}`;
+        const orderId = await generateOrderId(attempts);
         
         // Try to create the order
         const order = await Order.create({
@@ -257,7 +230,7 @@ exports.createOrder = async (req, res) => {
         });
         
         // Success - populate and return
-        await order.populate('items.menuItem', 'name price imageUrl');
+        await order.populate('items.menuItem', ORDER_ITEM_POPULATE_FIELDS);
         
         res.status(201).json({
           status: 'success',
@@ -435,42 +408,12 @@ exports.createManualOrder = async (req, res) => {
       });
     }
 
-    // Generate unique order ID with daily reset counter (reuse same logic as createOrder)
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
-    const todayStart = new Date(now);
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(now);
-    todayEnd.setHours(23, 59, 59, 999);
-
     let attempts = 0;
     const maxAttempts = 10;
 
     while (attempts < maxAttempts) {
       try {
-        const todayOrders = await Order.find({
-          createdAt: { $gte: todayStart, $lte: todayEnd },
-          orderId: { $regex: `^ORD-${dateStr}-\\d{4}$` },
-        })
-          .sort({ createdAt: -1 })
-          .limit(1);
-
-        let nextNumber = 1;
-        if (todayOrders.length > 0) {
-          const lastOrderId = todayOrders[0].orderId;
-          const match = lastOrderId.match(/-(\d{4})$/);
-          if (match) {
-            nextNumber = parseInt(match[1], 10) + 1;
-          }
-        }
-
-        nextNumber += attempts;
-
-        if (nextNumber > 9999) {
-          throw new Error('Maximum orders per day (9999) exceeded');
-        }
-
-        const orderId = `ORD-${dateStr}-${nextNumber.toString().padStart(4, '0')}`;
+        const orderId = await generateOrderId(attempts);
 
         const order = await Order.create({
           orderId,
@@ -484,7 +427,7 @@ exports.createManualOrder = async (req, res) => {
           tableNumber: serviceDetails.tableNumber,
         });
 
-        await order.populate('items.menuItem', 'name price imageUrl');
+        await order.populate('items.menuItem', ORDER_ITEM_POPULATE_FIELDS);
         await order.populate('customer', 'name phone');
 
         return res.status(201).json({
@@ -542,7 +485,7 @@ exports.createManualOrder = async (req, res) => {
 exports.getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ customer: req.user._id })
-      .populate('items.menuItem', 'name price imageUrl')
+      .populate('items.menuItem', ORDER_ITEM_POPULATE_FIELDS)
       .sort({ createdAt: -1 });
     orders.forEach(normalizeOrderForResponse);
 
@@ -647,7 +590,7 @@ exports.getAllOrders = async (req, res) => {
 
     let orders = await Order.find(filter)
       .populate('customer', 'name phone')
-      .populate('items.menuItem', 'name price imageUrl')
+      .populate('items.menuItem', ORDER_ITEM_POPULATE_FIELDS)
       .sort(sortObject)
       .lean(); // Use lean() for better performance
     orders = orders.map(normalizeOrderForResponse);
@@ -698,10 +641,7 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     // Try to find by orderId first, then by MongoDB _id
-    let order = await Order.findOne({ orderId: id });
-    if (!order) {
-      order = await Order.findById(id);
-    }
+    const order = await findOrderByIdentifier(id);
 
     if (!order) {
       return res.status(404).json({
@@ -726,7 +666,7 @@ exports.updateOrderStatus = async (req, res) => {
 
     // Populate and return
     await order.populate('customer', 'name phone');
-    await order.populate('items.menuItem', 'name price imageUrl');
+    await order.populate('items.menuItem', ORDER_ITEM_POPULATE_FIELDS);
 
     normalizeOrderForResponse(order);
     res.status(200).json({
@@ -759,10 +699,7 @@ exports.updateOrderPayment = async (req, res) => {
       });
     }
 
-    let order = await Order.findOne({ orderId: id });
-    if (!order) {
-      order = await Order.findById(id);
-    }
+    const order = await findOrderByIdentifier(id);
 
     if (!order) {
       return res.status(404).json({
@@ -781,7 +718,7 @@ exports.updateOrderPayment = async (req, res) => {
     await order.save();
 
     await order.populate('customer', 'name phone');
-    await order.populate('items.menuItem', 'name price imageUrl');
+    await order.populate('items.menuItem', ORDER_ITEM_POPULATE_FIELDS);
 
     normalizeOrderForResponse(order);
     res.status(200).json({
@@ -794,6 +731,90 @@ exports.updateOrderPayment = async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Unable to update payment status',
+    });
+  }
+};
+
+/**
+ * PATCH /api/orders/:id/items
+ * Edit an order by removing items before delivery
+ * Body: { removedItemIds: [orderItemId] }
+ */
+exports.updateOrderItems = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { removedItemIds = [] } = req.body;
+
+    if (!Array.isArray(removedItemIds)) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'removedItemIds must be an array',
+      });
+    }
+
+    if (removedItemIds.length === 0) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Provide at least one item to remove',
+      });
+    }
+
+    const order = await findOrderByIdentifier(id);
+
+    if (!order) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Order not found',
+      });
+    }
+
+    if (!isOrderEditable(order)) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Delivered orders cannot be edited',
+      });
+    }
+
+    const removedSet = new Set(removedItemIds.map(String));
+    const nextItems = order.items.filter((item) => !removedSet.has(String(item._id)));
+
+    if (nextItems.length === order.items.length) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'No matching order items were selected for removal',
+      });
+    }
+
+    if (nextItems.length === 0) {
+      await Order.findByIdAndDelete(order._id);
+      return res.status(200).json({
+        status: 'success',
+        message: 'Order removed because no items were left',
+        data: null,
+      });
+    }
+
+    order.items = nextItems;
+    order.totalAmount = nextItems.reduce(
+      (sum, item) => sum + Number(item.priceAtTime) * Number(item.quantity),
+      0
+    );
+    await order.save();
+
+    await order.populate('customer', 'name phone');
+    await order.populate('items.menuItem', ORDER_ITEM_POPULATE_FIELDS);
+    normalizeOrderForResponse(order);
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Order updated successfully',
+      data: order,
+    });
+  } catch (error) {
+    console.error('Update order items error:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Unable to update order items',
     });
   }
 };
@@ -816,10 +837,7 @@ exports.updateOrderItemPrepared = async (req, res) => {
     }
 
     // Try to find by orderId first, then by MongoDB _id
-    let order = await Order.findOne({ orderId: id });
-    if (!order) {
-      order = await Order.findById(id);
-    }
+    const order = await findOrderByIdentifier(id);
 
     if (!order) {
       return res.status(404).json({
@@ -840,7 +858,7 @@ exports.updateOrderItemPrepared = async (req, res) => {
     await order.save();
 
     await order.populate('customer', 'name phone');
-    await order.populate('items.menuItem', 'name price imageUrl');
+    await order.populate('items.menuItem', ORDER_ITEM_POPULATE_FIELDS);
     normalizeOrderForResponse(order);
 
     res.status(200).json({
@@ -867,10 +885,7 @@ exports.customerMarkedPaid = async (req, res) => {
     const { id } = req.params;
 
     // Try to find by orderId first, then by MongoDB _id
-    let order = await Order.findOne({ orderId: id });
-    if (!order) {
-      order = await Order.findById(id);
-    }
+    const order = await findOrderByIdentifier(id);
 
     if (!order) {
       return res.status(404).json({
@@ -906,7 +921,7 @@ exports.customerMarkedPaid = async (req, res) => {
     await order.save();
 
     await order.populate('customer', 'name phone');
-    await order.populate('items.menuItem', 'name price imageUrl');
+    await order.populate('items.menuItem', ORDER_ITEM_POPULATE_FIELDS);
     normalizeOrderForResponse(order);
 
     return res.status(200).json({
@@ -934,13 +949,13 @@ exports.getOrderById = async (req, res) => {
     // Try to find by orderId first (readable ID), then by MongoDB _id
     let order = await Order.findOne({ orderId: id })
       .populate('customer', 'name phone')
-      .populate('items.menuItem', 'name price imageUrl');
+      .populate('items.menuItem', ORDER_ITEM_POPULATE_FIELDS);
     
     if (!order) {
       // Try MongoDB _id if orderId didn't match
       order = await Order.findById(id)
         .populate('customer', 'name phone')
-        .populate('items.menuItem', 'name price imageUrl');
+        .populate('items.menuItem', ORDER_ITEM_POPULATE_FIELDS);
     }
 
     if (!order) {

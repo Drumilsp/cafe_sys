@@ -11,6 +11,8 @@ const Menu = () => {
   const [filteredItems, setFilteredItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [vegMode, setVegMode] = useState(false);
+  const [foodFilter, setFoodFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('default'); // 'default' | 'price_asc' | 'price_desc' | 'name_asc'
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,9 @@ const Menu = () => {
   useEffect(() => {
     let base = menuItems.filter((item) => item.available);
     if (selectedCategory !== 'all') base = base.filter((item) => item.category === selectedCategory);
+    if (vegMode) base = base.filter((item) => item.isVeg !== false);
+    if (foodFilter === 'veg') base = base.filter((item) => item.isVeg !== false);
+    if (foodFilter === 'nonveg') base = base.filter((item) => item.isVeg === false);
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       base = base.filter((item) => item.name.toLowerCase().includes(q));
@@ -41,7 +46,7 @@ const Menu = () => {
     else if (sortOption === 'price_desc') base = [...base].sort((a, b) => b.price - a.price);
     else if (sortOption === 'name_asc') base = [...base].sort((a, b) => a.name.localeCompare(b.name));
     setFilteredItems(base);
-  }, [selectedCategory, menuItems, searchQuery, sortOption]);
+  }, [selectedCategory, menuItems, searchQuery, sortOption, vegMode, foodFilter]);
 
   const fetchMenu = async () => {
     try {
@@ -171,10 +176,49 @@ const Menu = () => {
           </select>
         </div>
         <div className="category-filter">
+          <button
+            type="button"
+            onClick={() => setVegMode((prev) => !prev)}
+            className={`category-btn ${vegMode ? 'active' : ''}`}
+          >
+            Veg Mode {vegMode ? 'On' : 'Off'}
+          </button>
+          {selectedCategory !== 'all' && (
+            <>
+              <button
+                type="button"
+                onClick={() => setFoodFilter('all')}
+                className={`category-btn ${foodFilter === 'all' ? 'active' : ''}`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setFoodFilter('veg')}
+                className={`category-btn ${foodFilter === 'veg' ? 'active' : ''}`}
+              >
+                Veg
+              </button>
+              <button
+                type="button"
+                onClick={() => setFoodFilter('nonveg')}
+                className={`category-btn ${foodFilter === 'nonveg' ? 'active' : ''}`}
+              >
+                Non-Veg
+              </button>
+            </>
+          )}
+        </div>
+        <div className="category-filter">
           {categories.map((category) => (
             <button
               key={category}
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => {
+                setSelectedCategory(category);
+                if (category === 'all') {
+                  setFoodFilter('all');
+                }
+              }}
               className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
             >
               {category === 'all' ? 'All' : category.charAt(0).toUpperCase() + category.slice(1)}

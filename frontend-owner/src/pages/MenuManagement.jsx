@@ -12,6 +12,7 @@ const EditModal = ({ item, onClose, onSaved }) => {
     price: item.price.toString(),
     category: item.category || 'general',
     available: item.available,
+    isVeg: item.isVeg !== false,
     imageUrl: item.imageUrl || '',
   });
   const [saving, setSaving] = useState(false);
@@ -82,6 +83,16 @@ const EditModal = ({ item, onClose, onSaved }) => {
               placeholder="https://example.com/image.jpg"
             />
           </div>
+          <div className="mm-field">
+            <label>Food Type</label>
+            <select
+              value={form.isVeg ? 'veg' : 'nonveg'}
+              onChange={(e) => setForm({ ...form, isVeg: e.target.value === 'veg' })}
+            >
+              <option value="veg">Veg</option>
+              <option value="nonveg">Non-Veg</option>
+            </select>
+          </div>
           <div className="mm-field mm-field-check">
             <label>
               <input
@@ -112,6 +123,7 @@ const MenuManagement = () => {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES_ALL);
   const [editingItem, setEditingItem] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
+  const [togglingCategory, setTogglingCategory] = useState(null);
 
   const fetchMenu = useCallback(async () => {
     try {
@@ -155,6 +167,23 @@ const MenuManagement = () => {
     } catch (err) {
       console.error('Failed to delete:', err);
       alert('Failed to delete item');
+    }
+  };
+
+  const handleCategoryToggle = async (category, available) => {
+    setTogglingCategory(category);
+    try {
+      await axios.patch(`/api/menu/category/${encodeURIComponent(category)}/availability`, { available });
+      setMenuItems((prev) =>
+        prev.map((item) =>
+          (item.category || 'general') === category ? { ...item, available } : item
+        )
+      );
+    } catch (err) {
+      console.error('Failed to toggle category availability:', err);
+      alert('Failed to update category');
+    } finally {
+      setTogglingCategory(null);
     }
   };
 
@@ -224,9 +253,21 @@ const MenuManagement = () => {
       ) : (
         Object.entries(grouped).map(([cat, items]) => (
           <section key={cat} className="mm-category-section">
-            {activeCategory === CATEGORIES_ALL && (
+            <div className="mm-category-head">
               <h2 className="mm-category-label">{cat.charAt(0).toUpperCase() + cat.slice(1)}</h2>
-            )}
+              <button
+                type="button"
+                className={`mm-category-toggle ${items.every((item) => item.available) ? '' : 'disabled'}`}
+                disabled={togglingCategory === cat}
+                onClick={() => handleCategoryToggle(cat, !items.every((item) => item.available))}
+              >
+                {togglingCategory === cat
+                  ? 'Saving…'
+                  : items.every((item) => item.available)
+                    ? 'Disable Category'
+                    : 'Enable Category'}
+              </button>
+            </div>
             <div className="mm-item-grid">
               {items.map((item, idx) => {
                 const globalIdx = menuItems.findIndex((m) => m._id === item._id);

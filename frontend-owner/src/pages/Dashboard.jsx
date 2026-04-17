@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
 import OwnerLayout from '../components/OwnerLayout';
 import { ENABLE_PAYMENT } from '../config/payment';
@@ -21,12 +21,51 @@ const Dashboard = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [orderSearch, setOrderSearch] = useState('');
   const [completedSearch, setCompletedSearch] = useState('');
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [selectedRemovedItems, setSelectedRemovedItems] = useState([]);
+  const [editingOrderBusy, setEditingOrderBusy] = useState(false);
+  const [notificationReady, setNotificationReady] = useState(false);
+  const previousOrderIdsRef = useRef(new Set());
+  const audioRef = useRef(null);
+  const audioContextRef = useRef(null);
 
   useEffect(() => {
     fetchAllData(true);
     const interval = setInterval(() => fetchAllData(false), 10000);
     return () => clearInterval(interval);
   }, [activeTab, statusFilter, paymentFilter, sortBy, sortOrder]);
+
+  useEffect(() => {
+    const enableNotifications = async () => {
+      setNotificationReady(true);
+
+      if (typeof window === 'undefined' || !('Notification' in window)) {
+        return;
+      }
+
+      if (Notification.permission === 'default') {
+        try {
+          await Notification.requestPermission();
+        } catch (error) {
+          console.error('Notification permission request failed:', error);
+        }
+      }
+    };
+
+    const handleFirstInteraction = () => {
+      enableNotifications();
+      window.removeEventListener('pointerdown', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+    };
+
+    window.addEventListener('pointerdown', handleFirstInteraction, { once: true });
+    window.addEventListener('keydown', handleFirstInteraction, { once: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, []);
 
   const fetchAllData = async (isInitial = false) => {
     if (isInitial) {
@@ -47,13 +86,25 @@ const Dashboard = () => {
       if (paymentFilter !== 'all') params.append('paymentMethod', paymentFilter);
       params.append('sortBy', sortBy);
       params.append('sortOrder', sortOrder);
-      const [res, completedRes, counterRes] = await Promise.all([
+      const [res, completedRes, counterRes, allTodayRes] = await Promise.all([
         axios.get(`/api/orders?${params.toString()}`),
         axios.get(`/api/orders?status=${ENABLE_PAYMENT ? 'delivered' : 'collect_payment'}&sortBy=time&sortOrder=desc`),
         ENABLE_PAYMENT
           ? axios.get('/api/orders?paymentMethod=counter&paymentStatus=pending&sortBy=time&sortOrder=desc')
           : Promise.resolve({ data: { data: [] } }),
+        axios.get('/api/orders?todayOnly=1&sortBy=time&sortOrder=desc'),
       ]);
+
+      const allTodayOrders = allTodayRes.data.data || [];
+      const currentOrderIds = new Set(allTodayOrders.map((order) => order._id));
+
+      if (previousOrderIdsRef.current.size > 0) {
+        const newOrders = allTodayOrders.filter((order) => !previousOrderIdsRef.current.has(order._id));
+        if (newOrders.length > 0) {
+          notifyNewOrders(newOrders);
+        }
+      }
+      previousOrderIdsRef.current = currentOrderIds;
 
       setPayAtCounterOrders(counterRes.data.data || []);
       setOrders(
@@ -88,6 +139,71 @@ const Dashboard = () => {
     }
   };
 
+  const notifyNewOrders = (newOrders) => {
+    if (notificationReady) {
+      playNotificationSound();
+    }
+
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      const count = newOrders.length;
+      const latest = newOrders[0];
+      const body = count === 1
+        ? `${latest.customer?.name || 'Customer'} placed order ${latest.orderId}`
+        : `${count} new orders just arrived`;
+      new Notification('New Order Received', { body });
+    }
+  };
+
+  const playNotificationSound = () => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        if (!audioContextRef.current) {
+          audioContextRef.current = new AudioContextClass();
+        }
+
+        const context = audioContextRef.current;
+        const startBeep = () => {
+          const now = context.currentTime;
+          [0, 0.16].forEach((offset) => {
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(880, now + offset);
+            gainNode.gain.setValueAtTime(0.0001, now + offset);
+            gainNode.gain.exponentialRampToValueAtTime(0.12, now + offset + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.12);
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+            oscillator.start(now + offset);
+            oscillator.stop(now + offset + 0.14);
+          });
+        };
+
+        if (context.state === 'suspended') {
+          context.resume().then(startBeep).catch(() => {});
+        } else {
+          startBeep();
+        }
+      }
+
+      if (!audioRef.current) {
+        audioRef.current = new Audio(
+          'data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAAAAAAAP//AAD//wAA//8AAP//AAD//wAA'
+        );
+        audioRef.current.volume = 1;
+      }
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch((error) => {
+        console.error('Failed to play notification sound:', error);
+      });
+    } catch (error) {
+      console.error('Failed to play notification sound:', error);
+    }
+  };
+
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       await axios.patch(`/api/orders/${orderId}/status`, { orderStatus: newStatus });
@@ -95,6 +211,36 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Failed to update order status:', error);
       alert('Failed to update order status');
+    }
+  };
+
+  const openEditOrder = (order) => {
+    setEditingOrder(order);
+    setSelectedRemovedItems([]);
+  };
+
+  const toggleRemovedItemSelection = (itemId) => {
+    setSelectedRemovedItems((prev) =>
+      prev.includes(itemId) ? prev.filter((id) => id !== itemId) : [...prev, itemId]
+    );
+  };
+
+  const saveEditedOrder = async () => {
+    if (!editingOrder || selectedRemovedItems.length === 0) return;
+
+    setEditingOrderBusy(true);
+    try {
+      await axios.patch(`/api/orders/${editingOrder._id}/items`, {
+        removedItemIds: selectedRemovedItems,
+      });
+      setEditingOrder(null);
+      setSelectedRemovedItems([]);
+      fetchAllData();
+    } catch (error) {
+      console.error('Failed to edit order:', error);
+      alert(error.response?.data?.message || 'Failed to update order');
+    } finally {
+      setEditingOrderBusy(false);
     }
   };
 
@@ -292,6 +438,11 @@ const Dashboard = () => {
                       </button>
                     </div>
                   </div>
+                  {order.orderStatus !== 'delivered' && order.orderStatus !== 'collect_payment' && (
+                    <div className="order-actions order-actions-secondary">
+                      <button onClick={() => openEditOrder(order)} className="edit-order-btn">Edit Order</button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -409,6 +560,11 @@ const Dashboard = () => {
                       )}
                     </div>
                   </div>
+                  {order.orderStatus !== 'delivered' && order.orderStatus !== 'collect_payment' && (
+                    <div className="order-actions order-actions-secondary">
+                      <button onClick={() => openEditOrder(order)} className="edit-order-btn">Edit Order</button>
+                    </div>
+                  )}
                   {ENABLE_PAYMENT && order.orderStatus === 'verifying_payment' && (
                     <div className="order-actions">
                       <button onClick={() => updateOrderStatus(order._id, 'preparing')} className="status-btn">Verify Payment</button>
@@ -603,6 +759,46 @@ const Dashboard = () => {
           </section>
         )}
       </div>
+      {editingOrder && (
+        <div className="edit-order-modal-backdrop" onClick={() => setEditingOrder(null)}>
+          <div className="edit-order-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="edit-order-modal-header">
+              <h2>Edit Order {editingOrder.orderId}</h2>
+              <button type="button" className="edit-order-close" onClick={() => setEditingOrder(null)}>✕</button>
+            </div>
+            <p className="section-hint">Select items to remove. Unavailable items are highlighted.</p>
+            <div className="edit-order-items">
+              {editingOrder.items.map((item) => (
+                <label
+                  key={item._id}
+                  className={`edit-order-item ${item.menuItem?.available === false || !item.menuItem ? 'is-unavailable' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedRemovedItems.includes(item._id)}
+                    onChange={() => toggleRemovedItemSelection(item._id)}
+                  />
+                  <span>
+                    {item.menuItem?.name || 'Removed Item'} x {item.quantity} - ₹{item.priceAtTime * item.quantity}
+                    {(item.menuItem?.available === false || !item.menuItem) && ' (Unavailable)'}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div className="edit-order-modal-actions">
+              <button type="button" className="edit-order-btn secondary" onClick={() => setEditingOrder(null)}>Cancel</button>
+              <button
+                type="button"
+                className="edit-order-btn"
+                disabled={editingOrderBusy || selectedRemovedItems.length === 0}
+                onClick={saveEditedOrder}
+              >
+                {editingOrderBusy ? 'Saving…' : 'Remove Selected Items'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </OwnerLayout>
   );
 };

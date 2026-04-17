@@ -452,6 +452,10 @@
   border-top: 1px solid #e0e0e0;
 }
 
+.order-actions-secondary {
+  margin-bottom: 0.75rem;
+}
+
 .status-btn {
   padding: 0.75rem 1.5rem;
   background-color: #28a745;
@@ -465,10 +469,83 @@
   background-color: #218838;
 }
 
+.edit-order-btn {
+  padding: 0.65rem 1rem;
+  background-color: #111;
+  color: #fff;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.edit-order-btn.secondary {
+  background-color: #f1f3f5;
+  color: #333;
+}
+
 .empty-state {
   text-align: center;
   padding: 3rem;
   color: #666;
+}
+
+.edit-order-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 1rem;
+}
+
+.edit-order-modal {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.edit-order-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.edit-order-close {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.edit-order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.edit-order-item {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.edit-order-item.is-unavailable {
+  border-color: #f1b5b5;
+  background: #fff8f8;
+}
+
+.edit-order-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 .kitchen-section {

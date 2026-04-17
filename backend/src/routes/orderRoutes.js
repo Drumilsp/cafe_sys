@@ -13,6 +13,7 @@ router.post('/manual', authenticate, restrictToOwner, orderController.createManu
 router.get('/', authenticate, restrictToOwner, orderController.getAllOrders);
 router.patch('/:id/status', authenticate, restrictToOwner, orderController.updateOrderStatus);
 router.patch('/:id/payment', authenticate, restrictToOwner, orderController.updateOrderPayment);
+router.patch('/:id/items', authenticate, restrictToOwner, orderController.updateOrderItems);
 router.patch('/:id/items/:itemId/prepared', authenticate, restrictToOwner, orderController.updateOrderItemPrepared);
 
 // Shared route (must come after specific routes)

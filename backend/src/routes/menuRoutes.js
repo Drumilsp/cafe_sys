@@ -5,6 +5,7 @@ const { authenticate, restrictToOwner } = require('../middleware/auth');
 
 // Public routes
 router.get('/', menuController.listMenu);
+router.patch('/category/:category/availability', authenticate, restrictToOwner, menuController.toggleCategoryAvailability);
 router.get('/:id', menuController.getMenuItem);
 
 // Owner-only routes

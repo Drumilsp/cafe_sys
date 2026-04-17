@@ -38,7 +38,7 @@ exports.getMenuItem = async (req, res) => {
  */
 exports.createMenuItem = async (req, res) => {
   try {
-    const { name, price, available, category, imageUrl } = req.body;
+    const { name, price, available, category, imageUrl, isVeg } = req.body;
 
     // Compute next display order so new items appear at the end by default
     const lastItem = await Menu.findOne().sort({ displayOrder: -1 });
@@ -49,6 +49,7 @@ exports.createMenuItem = async (req, res) => {
       price,
       available,
       category,
+      isVeg,
       imageUrl,
       displayOrder: nextDisplayOrder,
     });
@@ -61,6 +62,36 @@ exports.createMenuItem = async (req, res) => {
       return res.status(400).json({ status: 'fail', errors: messages });
     }
     res.status(500).json({ status: 'error', message: 'Unable to create item' });
+  }
+};
+
+/**
+ * PATCH /api/menu/category/:category/availability
+ * Body: { available: true/false }
+ */
+exports.toggleCategoryAvailability = async (req, res) => {
+  try {
+    const { available } = req.body;
+    const category = decodeURIComponent(req.params.category || '').trim();
+
+    if (typeof available !== 'boolean') {
+      return res.status(400).json({ status: 'fail', message: 'available must be boolean' });
+    }
+
+    if (!category) {
+      return res.status(400).json({ status: 'fail', message: 'Category is required' });
+    }
+
+    await Menu.updateMany(
+      { category },
+      { $set: { available, updatedAt: Date.now() } }
+    );
+
+    const items = await Menu.find({ category }).sort({ displayOrder: 1, createdAt: -1 });
+    res.status(200).json({ status: 'ok', data: items });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', message: 'Unable to update category availability' });
   }
 };
 

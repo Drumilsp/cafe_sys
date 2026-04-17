@@ -11,6 +11,7 @@ const AddMenuItem = () => {
     price: '',
     category: '',
     available: true,
+    isVeg: true,
     imageUrl: '',
   });
   const [saving, setSaving] = useState(false);
@@ -82,6 +83,17 @@ const AddMenuItem = () => {
               onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
               placeholder="https://example.com/image.jpg"
             />
+          </div>
+
+          <div className="mm-field">
+            <label>Food Type</label>
+            <select
+              value={form.isVeg ? 'veg' : 'nonveg'}
+              onChange={(e) => setForm({ ...form, isVeg: e.target.value === 'veg' })}
+            >
+              <option value="veg">Veg</option>
+              <option value="nonveg">Non-Veg</option>
+            </select>
           </div>
 
           <div className="mm-field mm-field-check">

@@ -5,6 +5,12 @@ import { ENABLE_PAYMENT } from '../config/payment';
 import './ManualOrder.css';
 
 const ALL = 'All';
+const compareTableNames = (a, b) => {
+  const aStartsWithDigit = /^\d/.test(a.name || '');
+  const bStartsWithDigit = /^\d/.test(b.name || '');
+  if (aStartsWithDigit !== bStartsWithDigit) return aStartsWithDigit ? -1 : 1;
+  return String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' });
+};
 
 const ManualOrder = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -32,7 +38,7 @@ const ManualOrder = () => {
 
   useEffect(() => {
     axios.get('/api/tables')
-      .then((res) => setTables(res.data.data || []))
+      .then((res) => setTables((res.data.data || []).slice().sort(compareTableNames)))
       .catch((err) => console.error('Failed to load tables for manual order:', err))
       .finally(() => setTablesLoading(false));
   }, []);
@@ -104,7 +110,7 @@ const ManualOrder = () => {
       if (serviceType === 'table') {
         try {
           const res = await axios.get('/api/tables');
-          setTables(res.data.data || []);
+          setTables((res.data.data || []).slice().sort(compareTableNames));
         } catch (reloadErr) {
           console.error('Failed to refresh tables after manual order error:', reloadErr);
         }
