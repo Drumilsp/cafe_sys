@@ -206,6 +206,13 @@ const Dashboard = () => {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
+  const getOrderLocationLabel = (order) => {
+    if (order.serviceType === 'table' && order.tableNumber) {
+      return `Table ${order.tableNumber}`;
+    }
+    return 'Counter Pickup';
+  };
+
   if (loading && isInitialLoad) {
     return (
       <OwnerLayout title="Dashboard">
@@ -259,6 +266,7 @@ const Dashboard = () => {
                     <div>
                       <h3>Order #{order.orderId}</h3>
                       <p className="customer-info">{order.customer.name} — {order.customer.phone}</p>
+                      <p className="table-info">{getOrderLocationLabel(order)}</p>
                       <p className="order-time">{new Date(order.createdAt).toLocaleString()}</p>
                     </div>
                     <span className="status-badge" style={{ backgroundColor: getStatusColor(order.orderStatus) }}>
@@ -365,6 +373,7 @@ const Dashboard = () => {
                     <div>
                       <h3>Order #{order.orderId}</h3>
                       <p className="customer-info">{order.customer.name} - {order.customer.phone}</p>
+                      <p className="table-info">{getOrderLocationLabel(order)}</p>
                       <p className="order-time">{new Date(order.createdAt).toLocaleString()}</p>
                     </div>
                     <span className="status-badge" style={{ backgroundColor: getStatusColor(order.orderStatus) }}>
@@ -478,6 +487,7 @@ const Dashboard = () => {
                       <div>
                         <h3>Order #{order.orderId}</h3>
                         <p className="customer-info">{order.customer.name} — {order.customer.phone}</p>
+                        <p className="table-info">{getOrderLocationLabel(order)}</p>
                         <p className="order-time">{new Date(order.createdAt).toLocaleString()}</p>
                       </div>
                       <span className="status-badge" style={{ backgroundColor: getStatusColor(order.orderStatus) }}>

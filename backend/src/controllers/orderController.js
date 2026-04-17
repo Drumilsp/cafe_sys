@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const Menu = require('../models/Menu');
 const User = require('../models/User');
 const { v4: uuidv4 } = require('uuid');
+const { assertTableAvailable } = require('../utils/tableAvailability');
 
 const isPaymentEnabled = () => String(process.env.ENABLE_PAYMENT ?? 'true').toLowerCase() === 'true';
 
@@ -131,6 +132,14 @@ const normalizeServiceDetails = (body) => {
   return { serviceType: 'counter', tableNumber: null };
 };
 
+const ensureTableCanBeAssigned = async (serviceDetails) => {
+  if (serviceDetails.serviceType !== 'table' || !serviceDetails.tableNumber) {
+    return;
+  }
+
+  await assertTableAvailable(serviceDetails.tableNumber);
+};
+
 /**
  * POST /api/orders
  * Create a new order (Customer only)
@@ -163,6 +172,16 @@ exports.createOrder = async (req, res) => {
       serviceDetails = normalizeServiceDetails(req.body);
     } catch (err) {
       const statusCode = err.statusCode || 400;
+      return res.status(statusCode).json({
+        status: 'fail',
+        message: err.message,
+      });
+    }
+
+    try {
+      await ensureTableCanBeAssigned(serviceDetails);
+    } catch (err) {
+      const statusCode = err.statusCode || 409;
       return res.status(statusCode).json({
         status: 'fail',
         message: err.message,
@@ -357,6 +376,16 @@ exports.createManualOrder = async (req, res) => {
       serviceDetails = normalizeServiceDetails(req.body);
     } catch (err) {
       const statusCode = err.statusCode || 400;
+      return res.status(statusCode).json({
+        status: 'fail',
+        message: err.message,
+      });
+    }
+
+    try {
+      await ensureTableCanBeAssigned(serviceDetails);
+    } catch (err) {
+      const statusCode = err.statusCode || 409;
       return res.status(statusCode).json({
         status: 'fail',
         message: err.message,

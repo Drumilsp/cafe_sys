@@ -142,6 +142,13 @@
   margin-bottom: 1rem;
 }
 
+.table-info {
+  color: #0f766e;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-top: 0.2rem;
+}
+
 .pay-at-counter-section {
   margin: 1.5rem 0;
   padding: 1.5rem;

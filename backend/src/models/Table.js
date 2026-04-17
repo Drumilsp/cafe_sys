@@ -12,6 +12,10 @@ const tableSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    releasedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -19,4 +23,3 @@ const tableSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('Table', tableSchema);
-

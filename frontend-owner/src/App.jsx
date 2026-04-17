@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MenuManagement from './pages/MenuManagement';
 import AddMenuItem from './pages/AddMenuItem';
+import TableManagement from './pages/TableManagement';
 import ManualOrder from './pages/ManualOrder';
 import OrderHistory from './pages/OrderHistory';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -37,6 +38,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AddMenuItem />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tables"
+              element={
+                <ProtectedRoute>
+                  <TableManagement />
                 </ProtectedRoute>
               }
             />

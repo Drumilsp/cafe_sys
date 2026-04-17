@@ -17,6 +17,8 @@ const ManualOrder = () => {
   const [paymentMethod, setPaymentMethod] = useState('counter');
   const [serviceType, setServiceType] = useState('counter');
   const [tableNumber, setTableNumber] = useState('');
+  const [tables, setTables] = useState([]);
+  const [tablesLoading, setTablesLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -26,6 +28,13 @@ const ManualOrder = () => {
       .then((res) => setMenuItems(res.data.data))
       .catch(() => setError('Failed to load menu'))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    axios.get('/api/tables')
+      .then((res) => setTables(res.data.data || []))
+      .catch((err) => console.error('Failed to load tables for manual order:', err))
+      .finally(() => setTablesLoading(false));
   }, []);
 
   const categories = useMemo(
@@ -92,6 +101,14 @@ const ManualOrder = () => {
       setTableNumber('');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create order');
+      if (serviceType === 'table') {
+        try {
+          const res = await axios.get('/api/tables');
+          setTables(res.data.data || []);
+        } catch (reloadErr) {
+          console.error('Failed to refresh tables after manual order error:', reloadErr);
+        }
+      }
     } finally {
       setSubmitting(false);
     }
@@ -250,12 +267,20 @@ const ManualOrder = () => {
           {serviceType === 'table' && (
             <div className="mo-field">
               <label>Table Number *</label>
-              <input
-                type="text"
-                value={tableNumber}
-                onChange={(e) => setTableNumber(e.target.value)}
-                placeholder="e.g. T1, 5"
-              />
+              {tablesLoading ? (
+                <input type="text" value="Loading tables..." disabled />
+              ) : tables.length > 0 ? (
+                <select value={tableNumber} onChange={(e) => setTableNumber(e.target.value)}>
+                  <option value="">Select a free table</option>
+                  {tables.map((table) => (
+                    <option key={table._id} value={table.name}>
+                      {table.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input type="text" value="No free tables available" disabled />
+              )}
             </div>
           )}
 

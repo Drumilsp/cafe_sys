@@ -27,7 +27,7 @@ const Checkout = () => {
         setTables(res.data.data || []);
       } catch (err) {
         console.error('Failed to load tables:', err);
-        setTablesError('Unable to load tables. You can tell staff your table.');
+        setTablesError('Unable to load available tables right now.');
       } finally {
         setTablesLoading(false);
       }
@@ -83,6 +83,14 @@ const Checkout = () => {
       console.error('Checkout error:', err);
       const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to place order';
       setError(errorMessage);
+      if (serviceType === 'table') {
+        try {
+          const res = await axios.get('/api/tables');
+          setTables(res.data.data || []);
+        } catch (reloadErr) {
+          console.error('Failed to refresh tables after checkout error:', reloadErr);
+        }
+      }
       
       // If it's a validation error, show more details
       if (err.response?.data?.errors) {
@@ -184,12 +192,7 @@ const Checkout = () => {
                     ))}
                   </select>
                 ) : (
-                  <input
-                    type="text"
-                    value={tableNumber}
-                    onChange={(e) => setTableNumber(e.target.value)}
-                    placeholder="Enter your table number (e.g. 5 or A2)"
-                  />
+                  <p className="section-hint">No free tables are available right now.</p>
                 )}
                 {tablesError && <p className="section-hint">{tablesError}</p>}
               </div>
