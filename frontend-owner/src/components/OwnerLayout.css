@@ -81,6 +81,27 @@
   transition: background 0.15s;
 }
 
+.owner-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fffdf3;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.owner-settings-btn:hover,
+.owner-settings-btn.active {
+  background: #ffd600;
+  border-color: #ffd600;
+  color: #111111;
+}
+
 .owner-logout-btn:hover {
   background: #dc3545;
   border-color: #dc3545;

@@ -1,0 +1,137 @@
+.settings-card {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: #fffdf7;
+  border: 1px solid #ece4cf;
+  box-shadow: 0 12px 30px rgba(17, 17, 17, 0.06);
+}
+
+.settings-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a6d1d;
+}
+
+.settings-card h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  color: #1c1c1c;
+}
+
+.settings-help {
+  margin: 0.9rem 0 1.25rem;
+  color: #5b5b5b;
+  font-size: 0.95rem;
+}
+
+.sound-check-btn {
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  border: none;
+  background: #111111;
+  color: #fffdf3;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.sound-check-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.sound-check-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.sound-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+
+.sound-option-card {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid #e3dcc9;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.sound-option-card:hover {
+  transform: translateY(-1px);
+  border-color: #d9b53d;
+}
+
+.sound-option-card.active {
+  border-color: #d9b53d;
+  box-shadow: 0 0 0 3px rgba(217, 181, 61, 0.18);
+  background: #fff9e5;
+}
+
+.sound-option-card input {
+  margin-top: 0.2rem;
+  accent-color: #111111;
+}
+
+.sound-option-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sound-option-title {
+  font-weight: 700;
+  color: #1f1f1f;
+}
+
+.sound-selected-badge {
+  padding: 0.16rem 0.5rem;
+  border-radius: 999px;
+  background: #111111;
+  color: #fffdf3;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.sound-option-description {
+  margin: 0.35rem 0 0;
+  color: #66604f;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.settings-note {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: #fff3c4;
+  color: #5b4700;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 640px) {
+  .settings-card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sound-check-btn {
+    width: 100%;
+  }
+}

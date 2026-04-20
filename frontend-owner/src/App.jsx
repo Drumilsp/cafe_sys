@@ -7,6 +7,7 @@ import AddMenuItem from './pages/AddMenuItem';
 import TableManagement from './pages/TableManagement';
 import ManualOrder from './pages/ManualOrder';
 import OrderHistory from './pages/OrderHistory';
+import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -62,6 +63,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <OrderHistory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />

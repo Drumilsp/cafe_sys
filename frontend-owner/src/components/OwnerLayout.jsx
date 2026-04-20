@@ -33,6 +33,10 @@ const OwnerLayout = ({ children, title }) => {
           </nav>
           <div className="owner-header-right">
             <span className="owner-user">{user?.name}</span>
+            <Link to="/settings" className={`owner-settings-btn ${pathname === '/settings' ? 'active' : ''}`}>
+              <span aria-hidden="true">⚙</span>
+              <span>Settings</span>
+            </Link>
             <button className="owner-logout-btn" onClick={logout}>Logout</button>
           </div>
         </div>

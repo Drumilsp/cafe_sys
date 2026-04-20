@@ -2,7 +2,21 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
 import OwnerLayout from '../components/OwnerLayout';
 import { ENABLE_PAYMENT } from '../config/payment';
+import {
+  getStoredNotificationReady,
+  getStoredNotificationSound,
+  playNotificationPreset,
+  setStoredNotificationReady,
+} from '../utils/notificationSounds';
 import './Dashboard.css';
+
+const ALERT_BANNER_DURATION_MS = 5000;
+const ORDER_HIGHLIGHT_DURATION_MS = 6000;
+const DASHBOARD_LEADER_KEY = 'ownerDashboardPollingLeader';
+const DASHBOARD_SYNC_FALLBACK_KEY = 'ownerDashboardSyncMessage';
+const DASHBOARD_LEASE_MS = 15000;
+const DASHBOARD_LEADER_HEARTBEAT_MS = 5000;
+const DASHBOARD_SYNC_CHANNEL = 'owner-dashboard-sync';
 
 const Dashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -25,19 +39,101 @@ const Dashboard = () => {
   const [selectedRemovedItems, setSelectedRemovedItems] = useState([]);
   const [editingOrderBusy, setEditingOrderBusy] = useState(false);
   const [notificationReady, setNotificationReady] = useState(false);
+  const [isPollingLeader, setIsPollingLeader] = useState(false);
+  const [alertBanner, setAlertBanner] = useState(null);
+  const [recentNewOrderIds, setRecentNewOrderIds] = useState([]);
+  const [screenFlashVisible, setScreenFlashVisible] = useState(false);
   const previousOrderIdsRef = useRef(new Set());
+  const notificationReadyRef = useRef(false);
   const audioRef = useRef(null);
   const audioContextRef = useRef(null);
+  const bannerTimeoutRef = useRef(null);
+  const highlightTimeoutRef = useRef(null);
+  const screenFlashTimeoutRef = useRef(null);
+  const soundResetTimeoutRef = useRef(null);
+  const latestSeenOrderIdRef = useRef(null);
+  const latestFiltersRef = useRef({});
+  const pollingLeaderRef = useRef(false);
+  const tabIdRef = useRef(
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `tab-${Date.now()}-${Math.random().toString(16).slice(2)}`
+  );
+  const syncChannelRef = useRef(null);
+  const heartbeatIntervalRef = useRef(null);
+  const leaderCheckIntervalRef = useRef(null);
+  const syncRefreshTimeoutRef = useRef(null);
+  const allOrdersSignatureRef = useRef('');
 
   useEffect(() => {
-    fetchAllData(true);
-    const interval = setInterval(() => fetchAllData(false), 10000);
+    latestFiltersRef.current = {
+      activeTab,
+      statusFilter,
+      paymentFilter,
+      sortBy,
+      sortOrder,
+      viewMode,
+    };
+  }, [activeTab, statusFilter, paymentFilter, sortBy, sortOrder, viewMode]);
+
+  useEffect(() => {
+    if (!isPollingLeader) {
+      return undefined;
+    }
+
+    fetchAllData(true, { broadcastChanges: false });
+    const interval = setInterval(() => {
+      fetchAllData(false, { broadcastChanges: true });
+    }, 10000);
+
     return () => clearInterval(interval);
-  }, [activeTab, statusFilter, paymentFilter, sortBy, sortOrder]);
+  }, [isPollingLeader, activeTab, statusFilter, paymentFilter, sortBy, sortOrder]);
 
   useEffect(() => {
+    if (isPollingLeader || !isInitialLoad) {
+      return undefined;
+    }
+
+    fetchAllData(true, {
+      suppressNotifications: true,
+      broadcastChanges: false,
+    });
+
+    return undefined;
+  }, [isPollingLeader, isInitialLoad, activeTab, statusFilter, paymentFilter, sortBy, sortOrder]);
+
+  useEffect(() => {
+    const primeAudio = async () => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+
+      if (!audioRef.current) {
+        const audio = new Audio();
+        audio.preload = 'auto';
+        audio.volume = 1;
+        audioRef.current = audio;
+      }
+
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass && !audioContextRef.current) {
+        audioContextRef.current = new AudioContextClass();
+      }
+
+      if (audioContextRef.current?.state === 'suspended') {
+        try {
+          await audioContextRef.current.resume();
+        } catch (error) {
+          console.error('Failed to unlock audio context:', error);
+        }
+      }
+    };
+
     const enableNotifications = async () => {
+      notificationReadyRef.current = true;
+      setStoredNotificationReady(true);
       setNotificationReady(true);
+      await primeAudio();
 
       if (typeof window === 'undefined' || !('Notification' in window)) {
         return;
@@ -49,8 +145,15 @@ const Dashboard = () => {
         } catch (error) {
           console.error('Notification permission request failed:', error);
         }
+      } else if (Notification.permission === 'denied') {
+        console.info('Browser notifications are blocked; using in-app alerts only.');
       }
     };
+
+    if (getStoredNotificationReady()) {
+      enableNotifications();
+      return undefined;
+    }
 
     const handleFirstInteraction = () => {
       enableNotifications();
@@ -67,7 +170,189 @@ const Dashboard = () => {
     };
   }, []);
 
-  const fetchAllData = async (isInitial = false) => {
+  useEffect(() => () => {
+    window.clearTimeout(bannerTimeoutRef.current);
+    window.clearTimeout(highlightTimeoutRef.current);
+    window.clearTimeout(screenFlashTimeoutRef.current);
+    window.clearTimeout(soundResetTimeoutRef.current);
+    window.clearTimeout(syncRefreshTimeoutRef.current);
+  }, []);
+
+  useEffect(() => {
+    const readLeaderLease = () => {
+      try {
+        return JSON.parse(window.localStorage.getItem(DASHBOARD_LEADER_KEY) || 'null');
+      } catch (error) {
+        return null;
+      }
+    };
+
+    const writeLeaderLease = () => {
+      const lease = {
+        tabId: tabIdRef.current,
+        expiresAt: Date.now() + DASHBOARD_LEASE_MS,
+      };
+      window.localStorage.setItem(DASHBOARD_LEADER_KEY, JSON.stringify(lease));
+    };
+
+    const syncLeaderState = (isLeader) => {
+      pollingLeaderRef.current = isLeader;
+      setIsPollingLeader(isLeader);
+    };
+
+    const tryAcquireLeadership = () => {
+      const currentLease = readLeaderLease();
+      const now = Date.now();
+      const leaseExpired = !currentLease || currentLease.expiresAt <= now;
+      const isCurrentLeader = currentLease?.tabId === tabIdRef.current;
+
+      if (leaseExpired || isCurrentLeader) {
+        writeLeaderLease();
+        syncLeaderState(true);
+        return true;
+      }
+
+      syncLeaderState(false);
+      return false;
+    };
+
+    const maintainLeadership = () => {
+      if (pollingLeaderRef.current) {
+        writeLeaderLease();
+        return;
+      }
+
+      if (document.visibilityState === 'visible') {
+        tryAcquireLeadership();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        tryAcquireLeadership();
+      }
+    };
+
+    const handleStorage = (event) => {
+      if (event.key === DASHBOARD_LEADER_KEY) {
+        tryAcquireLeadership();
+      }
+
+      if (!syncChannelRef.current && event.key === DASHBOARD_SYNC_FALLBACK_KEY && event.newValue) {
+        try {
+          const message = JSON.parse(event.newValue);
+          handleSyncMessage(message);
+        } catch (error) {
+          console.error('Failed to parse dashboard sync message:', error);
+        }
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      const currentLease = readLeaderLease();
+      if (currentLease?.tabId === tabIdRef.current) {
+        window.localStorage.removeItem(DASHBOARD_LEADER_KEY);
+      }
+    };
+
+    const postSyncMessage = (message) => {
+      if (syncChannelRef.current) {
+        syncChannelRef.current.postMessage(message);
+        return;
+      }
+
+      window.localStorage.setItem(DASHBOARD_SYNC_FALLBACK_KEY, JSON.stringify(message));
+      window.localStorage.removeItem(DASHBOARD_SYNC_FALLBACK_KEY);
+    };
+
+    const requestSyncRefresh = () => {
+      postSyncMessage({
+        type: 'refresh-request',
+        sourceTabId: tabIdRef.current,
+        timestamp: Date.now(),
+      });
+    };
+
+    const scheduleFollowerRefresh = () => {
+      window.clearTimeout(syncRefreshTimeoutRef.current);
+      syncRefreshTimeoutRef.current = window.setTimeout(() => {
+        fetchAllData(false, {
+          suppressNotifications: true,
+          broadcastChanges: false,
+        });
+      }, 150);
+    };
+
+    const handleSyncMessage = (message) => {
+      if (!message || message.sourceTabId === tabIdRef.current) {
+        return;
+      }
+
+      if (message.type === 'refresh-request') {
+        if (pollingLeaderRef.current) {
+          fetchAllData(false, {
+            suppressNotifications: true,
+            broadcastChanges: true,
+          });
+        }
+        return;
+      }
+
+      if (message.type === 'orders-changed' && !pollingLeaderRef.current) {
+        scheduleFollowerRefresh();
+      }
+    };
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      syncChannelRef.current = new BroadcastChannel(DASHBOARD_SYNC_CHANNEL);
+      syncChannelRef.current.onmessage = (event) => {
+        handleSyncMessage(event.data);
+      };
+    }
+
+    heartbeatIntervalRef.current = window.setInterval(maintainLeadership, DASHBOARD_LEADER_HEARTBEAT_MS);
+    leaderCheckIntervalRef.current = window.setInterval(() => {
+      if (!pollingLeaderRef.current) {
+        tryAcquireLeadership();
+      }
+    }, DASHBOARD_LEADER_HEARTBEAT_MS);
+
+    tryAcquireLeadership();
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    dashboardSyncHelpersRef.current = {
+      postSyncMessage,
+      requestSyncRefresh,
+      handleSyncMessage,
+    };
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.clearInterval(heartbeatIntervalRef.current);
+      window.clearInterval(leaderCheckIntervalRef.current);
+      window.clearTimeout(syncRefreshTimeoutRef.current);
+      syncChannelRef.current?.close();
+
+      const currentLease = readLeaderLease();
+      if (currentLease?.tabId === tabIdRef.current) {
+        window.localStorage.removeItem(DASHBOARD_LEADER_KEY);
+      }
+    };
+  }, []);
+
+  const dashboardSyncHelpersRef = useRef({
+    postSyncMessage: () => {},
+    requestSyncRefresh: () => {},
+  });
+
+  const fetchAllData = async (isInitial = false, options = {}) => {
+    const { suppressNotifications = false, broadcastChanges = false } = options;
+
     if (isInitial) {
       setLoading(true);
       setIsInitialLoad(true);
@@ -96,14 +381,34 @@ const Dashboard = () => {
       ]);
 
       const allTodayOrders = allTodayRes.data.data || [];
+      const allOrdersSignature = allTodayOrders
+        .map(
+          (order) =>
+            `${order._id}:${order.orderStatus}:${order.paymentStatus}:${order.updatedAt || order.createdAt}`
+        )
+        .join('|');
       const currentOrderIds = new Set(allTodayOrders.map((order) => order._id));
+      const latestOrder = allTodayOrders[0] || null;
 
-      if (previousOrderIdsRef.current.size > 0) {
+      if (!suppressNotifications && previousOrderIdsRef.current.size > 0) {
         const newOrders = allTodayOrders.filter((order) => !previousOrderIdsRef.current.has(order._id));
-        if (newOrders.length > 0) {
-          notifyNewOrders(newOrders);
+        const unseenNewOrders = latestSeenOrderIdRef.current
+          ? newOrders.filter((order) => order._id !== latestSeenOrderIdRef.current)
+          : newOrders;
+        if (unseenNewOrders.length > 0) {
+          latestSeenOrderIdRef.current = unseenNewOrders[0]._id;
+          notifyNewOrders(unseenNewOrders);
         }
+      } else if (latestOrder) {
+        latestSeenOrderIdRef.current = latestOrder._id;
       }
+
+      if (latestOrder && !latestSeenOrderIdRef.current) {
+        latestSeenOrderIdRef.current = latestOrder._id;
+      }
+
+      const hasMeaningfulChange = allOrdersSignatureRef.current !== allOrdersSignature;
+      allOrdersSignatureRef.current = allOrdersSignature;
       previousOrderIdsRef.current = currentOrderIds;
 
       setPayAtCounterOrders(counterRes.data.data || []);
@@ -113,6 +418,14 @@ const Dashboard = () => {
         )
       );
       setCompletedOrders(completedRes.data.data || []);
+
+      if (broadcastChanges && hasMeaningfulChange) {
+        dashboardSyncHelpersRef.current.postSyncMessage({
+          type: 'orders-changed',
+          sourceTabId: tabIdRef.current,
+          timestamp: Date.now(),
+        });
+      }
 
     } catch (error) {
       console.error('Failed to fetch orders:', error);
@@ -130,7 +443,13 @@ const Dashboard = () => {
     setMarkingPaidId(order._id);
     try {
       await axios.patch(`/api/orders/${order._id}/payment`, { paymentStatus: 'paid' });
-      fetchAllData();
+      await fetchAllData(false, {
+        suppressNotifications: true,
+        broadcastChanges: pollingLeaderRef.current,
+      });
+      if (!pollingLeaderRef.current) {
+        dashboardSyncHelpersRef.current.requestSyncRefresh();
+      }
     } catch (error) {
       console.error('Failed to mark as paid:', error);
       alert('Failed to mark as paid');
@@ -140,13 +459,36 @@ const Dashboard = () => {
   };
 
   const notifyNewOrders = (newOrders) => {
-    if (notificationReady) {
-      playNotificationSound();
-    }
+    const count = newOrders.length;
+    const latest = newOrders[0];
+    const orderIds = newOrders.map((order) => order._id);
+    const bannerMessage = count === 1
+      ? `New Order Received 🍽️ Order #${latest.orderId}`
+      : `${count} New Orders Received 🍽️`;
+
+    setAlertBanner(bannerMessage);
+    setRecentNewOrderIds(orderIds);
+    setScreenFlashVisible(true);
+
+    window.clearTimeout(bannerTimeoutRef.current);
+    window.clearTimeout(highlightTimeoutRef.current);
+    window.clearTimeout(screenFlashTimeoutRef.current);
+
+    bannerTimeoutRef.current = window.setTimeout(() => {
+      setAlertBanner(null);
+    }, ALERT_BANNER_DURATION_MS);
+
+    highlightTimeoutRef.current = window.setTimeout(() => {
+      setRecentNewOrderIds([]);
+    }, ORDER_HIGHLIGHT_DURATION_MS);
+
+    screenFlashTimeoutRef.current = window.setTimeout(() => {
+      setScreenFlashVisible(false);
+    }, 900);
+
+    playNotificationSound();
 
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      const count = newOrders.length;
-      const latest = newOrders[0];
       const body = count === 1
         ? `${latest.customer?.name || 'Customer'} placed order ${latest.orderId}`
         : `${count} new orders just arrived`;
@@ -158,6 +500,10 @@ const Dashboard = () => {
     if (typeof window === 'undefined') return;
 
     try {
+      if (!notificationReadyRef.current) {
+        return;
+      }
+
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       if (AudioContextClass) {
         if (!audioContextRef.current) {
@@ -165,40 +511,20 @@ const Dashboard = () => {
         }
 
         const context = audioContextRef.current;
-        const startBeep = () => {
-          const now = context.currentTime;
-          [0, 0.16].forEach((offset) => {
-            const oscillator = context.createOscillator();
-            const gainNode = context.createGain();
-            oscillator.type = 'triangle';
-            oscillator.frequency.setValueAtTime(880, now + offset);
-            gainNode.gain.setValueAtTime(0.0001, now + offset);
-            gainNode.gain.exponentialRampToValueAtTime(0.12, now + offset + 0.02);
-            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.12);
-            oscillator.connect(gainNode);
-            gainNode.connect(context.destination);
-            oscillator.start(now + offset);
-            oscillator.stop(now + offset + 0.14);
+        const selectedSound = getStoredNotificationSound();
+        const startBell = () => {
+          playNotificationPreset({
+            audioContext: context,
+            presetKey: selectedSound,
           });
         };
 
         if (context.state === 'suspended') {
-          context.resume().then(startBeep).catch(() => {});
+          context.resume().then(startBell).catch(() => {});
         } else {
-          startBeep();
+          startBell();
         }
       }
-
-      if (!audioRef.current) {
-        audioRef.current = new Audio(
-          'data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAAAAAAAP//AAD//wAA//8AAP//AAD//wAA'
-        );
-        audioRef.current.volume = 1;
-      }
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch((error) => {
-        console.error('Failed to play notification sound:', error);
-      });
     } catch (error) {
       console.error('Failed to play notification sound:', error);
     }
@@ -207,7 +533,13 @@ const Dashboard = () => {
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       await axios.patch(`/api/orders/${orderId}/status`, { orderStatus: newStatus });
-      fetchAllData();
+      await fetchAllData(false, {
+        suppressNotifications: true,
+        broadcastChanges: pollingLeaderRef.current,
+      });
+      if (!pollingLeaderRef.current) {
+        dashboardSyncHelpersRef.current.requestSyncRefresh();
+      }
     } catch (error) {
       console.error('Failed to update order status:', error);
       alert('Failed to update order status');
@@ -235,7 +567,13 @@ const Dashboard = () => {
       });
       setEditingOrder(null);
       setSelectedRemovedItems([]);
-      fetchAllData();
+      await fetchAllData(false, {
+        suppressNotifications: true,
+        broadcastChanges: pollingLeaderRef.current,
+      });
+      if (!pollingLeaderRef.current) {
+        dashboardSyncHelpersRef.current.requestSyncRefresh();
+      }
     } catch (error) {
       console.error('Failed to edit order:', error);
       alert(error.response?.data?.message || 'Failed to update order');
@@ -276,7 +614,13 @@ const Dashboard = () => {
   const toggleItemPrepared = async (orderId, itemId, prepared) => {
     try {
       await axios.patch(`/api/orders/${orderId}/items/${itemId}/prepared`, { prepared });
-      fetchAllData();
+      await fetchAllData(false, {
+        suppressNotifications: true,
+        broadcastChanges: pollingLeaderRef.current,
+      });
+      if (!pollingLeaderRef.current) {
+        dashboardSyncHelpersRef.current.requestSyncRefresh();
+      }
     } catch (error) {
       console.error('Failed to update item prepared state:', error);
       alert('Failed to update item prepared state');
@@ -292,7 +636,13 @@ const Dashboard = () => {
           axios.patch(`/api/orders/${row.orderId}/items/${row.itemId}/prepared`, { prepared })
         )
       );
-      fetchAllData();
+      await fetchAllData(false, {
+        suppressNotifications: true,
+        broadcastChanges: pollingLeaderRef.current,
+      });
+      if (!pollingLeaderRef.current) {
+        dashboardSyncHelpersRef.current.requestSyncRefresh();
+      }
     } catch (error) {
       console.error('Failed to update group prepared state:', error);
       alert('Failed to update prepared state for this item group');
@@ -373,6 +723,8 @@ const Dashboard = () => {
     );
   };
 
+  const isRecentlyArrivedOrder = (orderId) => recentNewOrderIds.includes(orderId);
+
   if (loading && isInitialLoad) {
     return (
       <OwnerLayout title="Dashboard">
@@ -383,6 +735,13 @@ const Dashboard = () => {
 
   return (
     <OwnerLayout title={<>Dashboard {isRefreshing && <span className="refresh-indicator">⟳</span>}</>}>
+      {screenFlashVisible && <div className="new-order-screen-flash" aria-hidden="true" />}
+      {alertBanner && (
+        <div className="new-order-banner" role="status" aria-live="polite">
+          <span className="new-order-banner-dot" aria-hidden="true" />
+          <span>{alertBanner}</span>
+        </div>
+      )}
       <div className="db-toolbar">
         <button onClick={() => fetchAllData(false)} className="refresh-btn" title="Refresh">
           ⟳ Refresh
@@ -421,7 +780,10 @@ const Dashboard = () => {
             <p className="section-hint">Mark as paid when you receive payment; the order will move to the main list.</p>
             <div className="orders-list pay-at-counter-list">
               {payAtCounterOrders.map((order) => (
-                <div key={order._id} className="order-card counter-card">
+                <div
+                  key={order._id}
+                  className={`order-card counter-card ${isRecentlyArrivedOrder(order._id) ? 'new-order-card' : ''}`}
+                >
                   <div className="order-header">
                     <div>
                       <h3>Order #{order.orderId}</h3>
@@ -534,7 +896,10 @@ const Dashboard = () => {
               </div>
             ) : (
               filteredOrders.map((order) => (
-                <div key={order._id} className="order-card">
+                <div
+                  key={order._id}
+                  className={`order-card ${isRecentlyArrivedOrder(order._id) ? 'new-order-card' : ''}`}
+                >
                   <div className="order-header">
                     <div>
                       <h3>Order #{order.orderId}</h3>
@@ -654,7 +1019,10 @@ const Dashboard = () => {
             ) : (
               <div className="orders-list">
                 {filteredCompleted.map((order) => (
-                  <div key={order._id} className="order-card completed-card">
+                  <div
+                    key={order._id}
+                    className={`order-card completed-card ${isRecentlyArrivedOrder(order._id) ? 'new-order-card' : ''}`}
+                  >
                     <div className="order-header">
                       <div>
                         <h3>Order #{order.orderId}</h3>
@@ -701,7 +1069,10 @@ const Dashboard = () => {
                 <div className="empty-state">No pending or preparing orders.</div>
               ) : (
                 kitchenOrders.map((order) => (
-                  <div key={order._id} className="kitchen-card">
+                  <div
+                    key={order._id}
+                    className={`kitchen-card ${isRecentlyArrivedOrder(order._id) ? 'new-order-card' : ''}`}
+                  >
                     <div className="kitchen-header">
                       <div>
                         <h3>Order #{order.orderId}</h3>
