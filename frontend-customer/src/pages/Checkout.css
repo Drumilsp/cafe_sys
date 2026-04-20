@@ -93,13 +93,19 @@
 }
 
 .form-group select,
-.form-group input {
+.form-group input,
+.form-group textarea {
   width: 100%;
   padding: 0.6rem 0.7rem;
   border-radius: 10px;
   border: 1px solid var(--border-subtle);
   background-color: #fffdf3;
   font-size: 0.9rem;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 110px;
 }
 
 .section-hint {

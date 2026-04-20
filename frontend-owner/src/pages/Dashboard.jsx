@@ -359,6 +359,20 @@ const Dashboard = () => {
     return 'Counter Pickup';
   };
 
+  const renderCustomerComment = (order) => {
+    const comment = order.customerComment?.trim();
+    if (!comment) {
+      return null;
+    }
+
+    return (
+      <div className="order-comment">
+        <span className="order-comment-label">Comment</span>
+        <p>{comment}</p>
+      </div>
+    );
+  };
+
   if (loading && isInitialLoad) {
     return (
       <OwnerLayout title="Dashboard">
@@ -427,6 +441,7 @@ const Dashboard = () => {
                       </div>
                     ))}
                   </div>
+                  {renderCustomerComment(order)}
                   <div className="order-footer">
                     <div className="order-total">
                       <span>Total to collect:</span>
@@ -542,6 +557,7 @@ const Dashboard = () => {
                       </div>
                     ))}
                   </div>
+                  {renderCustomerComment(order)}
                   <div className="order-footer">
                     <div className="order-total">
                       <span>Total:</span>
@@ -658,6 +674,7 @@ const Dashboard = () => {
                         </div>
                       ))}
                     </div>
+                    {renderCustomerComment(order)}
                     <div className="order-footer">
                       <div className="order-total">
                         <span>Total:</span>
@@ -705,6 +722,7 @@ const Dashboard = () => {
                         </div>
                       ))}
                     </div>
+                    {renderCustomerComment(order)}
                     <div className="kitchen-actions">
                       {ENABLE_PAYMENT && order.orderStatus === 'verifying_payment' && (
                         <button className="kitchen-btn start" onClick={() => updateOrderStatus(order._id, 'preparing')}>Verify Payment</button>

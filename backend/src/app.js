@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const { getDbState, isDbReady } = require('./config/db');
 
 const app = express();
 
@@ -41,12 +42,19 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
+app.use((req, res, next) => {
+  req.requestStartedAt = Date.now();
+  next();
+});
+
 /* ===================== HEALTH CHECK ===================== */
 app.get('/health', (req, res) => {
+  const db = getDbState();
   res.status(200).json({
     status: 'OK',
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
+    database: db,
   });
 });
 
@@ -66,6 +74,23 @@ const authLimiter = rateLimit({
 
 app.use('/api/auth', authLimiter);
 
+app.use('/api', (req, res, next) => {
+  if (isDbReady()) {
+    return next();
+  }
+
+  const db = getDbState();
+  console.error(
+    `Rejecting ${req.method} ${req.originalUrl} because database is ${db.state}`
+  );
+
+  return res.status(503).json({
+    status: 'error',
+    message: 'Service is warming up. Please retry in a few seconds.',
+    code: 'DB_NOT_READY',
+  });
+});
+
 /* ===================== API ROUTES ===================== */
 const authRoutes = require('./routes/authRoutes');
 const menuRoutes = require('./routes/menuRoutes');
@@ -84,10 +109,15 @@ app.use((req, res) => {
 
 /* ===================== ERROR HANDLING ===================== */
 app.use((err, req, res, next) => {
-  if (process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line no-console
-    console.error(err);
-  }
+  const durationMs = req.requestStartedAt ? Date.now() - req.requestStartedAt : null;
+
+  console.error('Unhandled error:', {
+    method: req.method,
+    path: req.originalUrl,
+    durationMs,
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
+  });
 
   res.status(err.status || 500).json({
     status: 'error',

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { getApiErrorMessage, requestWithRetry } from '../utils/api';
 import './Login.css';
 
 const Login = () => {
@@ -22,14 +23,17 @@ const Login = () => {
     setError('');
 
     try {
-      const res = await axios.post('/api/auth/request-otp', { name, phone });
+      const res = await requestWithRetry(
+        () => axios.post('/api/auth/request-otp', { name, phone }),
+        { retries: 1, retryDelayMs: 1500 }
+      );
       setOtpSent(true);
       setStep('verify');
       if (res.data?.otp) {
         setOtp(res.data.otp);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to send OTP');
+      setError(getApiErrorMessage(err, 'Failed to send OTP'));
     } finally {
       setLoading(false);
     }
@@ -41,14 +45,17 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await axios.post('/api/auth/verify-otp', { phone, otp });
+      const response = await requestWithRetry(
+        () => axios.post('/api/auth/verify-otp', { phone, otp }),
+        { retries: 1, retryDelayMs: 1500 }
+      );
       login(response.data.data.user, response.data.data.token);
       
       // Redirect to the page user was trying to access, or menu
       const redirect = searchParams.get('redirect') || '/menu';
       navigate(redirect);
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid OTP');
+      setError(getApiErrorMessage(err, 'Invalid OTP'));
     } finally {
       setLoading(false);
     }

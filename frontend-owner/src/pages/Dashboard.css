@@ -149,6 +149,32 @@
   margin-top: 0.2rem;
 }
 
+.order-comment {
+  margin: 0.9rem 0 0;
+  padding: 0.8rem 0.9rem;
+  border-radius: 10px;
+  background: #fff8db;
+  border: 1px solid #f3d66b;
+}
+
+.order-comment-label {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #7c5b00;
+}
+
+.order-comment p {
+  margin: 0;
+  color: #4a3a00;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
 .pay-at-counter-section {
   margin: 1.5rem 0;
   padding: 1.5rem;

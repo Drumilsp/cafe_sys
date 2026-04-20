@@ -1519,108 +1519,213 @@
       "imageUrl": ""
     },
     {
-      "name": "Veg Shangai Fried Rice / Noodles",
+      "name": "Veg Shangai Fried Rice",
       "price": 139,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Fried Rice",
       "imageUrl": ""
     },
     {
-      "name": "Veg Fried Rice / Noodles",
+      "name": "Veg Shangai Noodles",
+      "price": 139,
+      "available": true,
+      "category": "Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Fried Rice",
       "price": 99,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Fried Rice",
       "imageUrl": ""
     },
     {
-      "name": "Veg Schezwan Fried Rice / Noodles",
+      "name": "Veg Noodles",
+      "price": 99,
+      "available": true,
+      "category": "Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Veg Schezwan Fried Rice",
       "price": 119,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Fried Rice",
       "imageUrl": ""
     },
     {
-      "name": "Paneer Fried Rice / Noodles",
+      "name": "Veg Schezwan Noodles",
       "price": 119,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Noodles",
       "imageUrl": ""
     },
     {
-      "name": "Paneer Schezwan Fried Rice / Noodles",
+      "name": "Paneer Fried Rice",
+      "price": 119,
+      "available": true,
+      "category": "Fried Rice",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Noodles",
+      "price": 119,
+      "available": true,
+      "category": "Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Paneer Schezwan Fried Rice",
       "price": 139,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Fried Rice",
       "imageUrl": ""
     },
     {
-      "name": "Mushroom Fried Rice / Noodles",
-      "price": 119,
-      "available": true,
-      "category": "Fried Rice & Noodles",
-      "imageUrl": ""
-    },
-    {
-      "name": "Mushroom Schezwan Fried Rice / Noodles",
+      "name": "Paneer Schezwan Noodles",
       "price": 139,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Noodles",
       "imageUrl": ""
     },
     {
-      "name": "Gobi Fried Rice / Noodles",
+      "name": "Mushroom Fried Rice",
+      "price": 119,
+      "available": true,
+      "category": "Fried Rice",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Noodles",
+      "price": 119,
+      "available": true,
+      "category": "Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Schezwan Fried Rice",
+      "price": 139,
+      "available": true,
+      "category": "Fried Rice",
+      "imageUrl": ""
+    },
+    {
+      "name": "Mushroom Schezwan Noodles",
+      "price": 139,
+      "available": true,
+      "category": "Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Gobi Fried Rice",
       "price": 109,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Fried Rice",
       "imageUrl": ""
     },
     {
-      "name": "Gobi Schezwan Fried Rice / Noodles",
+      "name": "Gobi Noodles",
+      "price": 109,
+      "available": true,
+      "category": "Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Gobi Schezwan Fried Rice",
       "price": 129,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Fried Rice",
       "imageUrl": ""
     },
     {
-      "name": "Egg Fried Rice / Noodles",
+      "name": "Gobi Schezwan Noodles",
+      "price": 129,
+      "available": true,
+      "category": "Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Fried Rice",
       "price": 109,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Fried Rice",
       "imageUrl": ""
     },
     {
-      "name": "Egg Schezwan Rice / Noodles",
+      "name": "Egg Noodles",
+      "price": 109,
+      "available": true,
+      "category": "Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Egg Schezwan Fried Rice",
       "price": 119,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Fried Rice",
       "imageUrl": ""
     },
     {
-      "name": "Chicken Fried Rice / Noodles",
+      "name": "Egg Schezwan Noodles",
+      "price": 119,
+      "available": true,
+      "category": "Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Fried Rice",
       "price": 149,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Fried Rice",
       "imageUrl": ""
     },
     {
-      "name": "Chicken Schezwan Fried Rice / Noodles",
+      "name": "Chicken Noodles",
+      "price": 149,
+      "available": true,
+      "category": "Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Schezwan Fried Rice",
       "price": 169,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Fried Rice",
       "imageUrl": ""
     },
     {
-      "name": "Chilly Garlic Chicken Fried Rice / Noodles",
-      "price": 179,
+      "name": "Chicken Schezwan Noodles",
+      "price": 169,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Noodles",
       "imageUrl": ""
     },
     {
-      "name": "Chicken Shangai Fried Rice / Noodles",
+      "name": "Chilly Garlic Chicken Fried Rice",
       "price": 179,
       "available": true,
-      "category": "Fried Rice & Noodles",
+      "category": "Fried Rice",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chilly Garlic Chicken Noodles",
+      "price": 179,
+      "available": true,
+      "category": "Noodles",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Shangai Fried Rice",
+      "price": 179,
+      "available": true,
+      "category": "Fried Rice",
+      "imageUrl": ""
+    },
+    {
+      "name": "Chicken Shangai Noodles",
+      "price": 179,
+      "available": true,
+      "category": "Noodles",
       "imageUrl": ""
     },
     {

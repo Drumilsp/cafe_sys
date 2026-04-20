@@ -12,8 +12,8 @@ const NON_VEG_KEYWORDS = [
   'prawn',
   'egg',
   'keema',
-  'bacon',
-  'ham',
+  'anda',
+  'murg',
 ];
 
 async function updateVegField() {

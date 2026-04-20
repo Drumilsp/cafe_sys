@@ -61,6 +61,12 @@ const orderSchema = new mongoose.Schema(
       enum: ['counter', 'table'],
       default: 'counter',
     },
+    customerComment: {
+      type: String,
+      trim: true,
+      maxlength: [300, 'Comment must be 300 characters or less'],
+      default: '',
+    },
     tableNumber: {
       type: String,
       default: null,

@@ -143,6 +143,28 @@ const ensureTableCanBeAssigned = async (serviceDetails) => {
   await assertTableAvailable(serviceDetails.tableNumber);
 };
 
+const normalizeCustomerComment = (value) => {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+
+  if (typeof value !== 'string') {
+    const error = new Error('Comment must be text');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const comment = value.trim();
+
+  if (comment.length > 300) {
+    const error = new Error('Comment must be 300 characters or less');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return comment;
+};
+
 /**
  * POST /api/orders
  * Create a new order (Customer only)
@@ -153,6 +175,7 @@ exports.createOrder = async (req, res) => {
     const { items } = req.body;
     const paymentEnabled = isPaymentEnabled();
     const paymentMethod = paymentEnabled ? req.body.paymentMethod : 'counter';
+    let customerComment = '';
 
     // Validation
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -185,6 +208,16 @@ exports.createOrder = async (req, res) => {
       await ensureTableCanBeAssigned(serviceDetails);
     } catch (err) {
       const statusCode = err.statusCode || 409;
+      return res.status(statusCode).json({
+        status: 'fail',
+        message: err.message,
+      });
+    }
+
+    try {
+      customerComment = normalizeCustomerComment(req.body.customerComment);
+    } catch (err) {
+      const statusCode = err.statusCode || 400;
       return res.status(statusCode).json({
         status: 'fail',
         message: err.message,
@@ -226,6 +259,7 @@ exports.createOrder = async (req, res) => {
           paymentStatus: 'pending',
           orderStatus: 'pending',
           serviceType: serviceDetails.serviceType,
+          customerComment,
           tableNumber: serviceDetails.tableNumber,
         });
         

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { getApiErrorMessage, requestWithRetry } from '../utils/api';
 import './Login.css';
 
 const Login = () => {
@@ -18,16 +19,20 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await axios.post('/api/auth/owner-login', {
-        adminId,
-        password,
-      });
+      const response = await requestWithRetry(
+        () =>
+          axios.post('/api/auth/owner-login', {
+            adminId,
+            password,
+          }),
+        { retries: 1, retryDelayMs: 1500 }
+      );
 
       const userData = response.data.data.user;
       login(userData, response.data.data.token);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials');
+      setError(getApiErrorMessage(err, 'Invalid credentials'));
     } finally {
       setLoading(false);
     }

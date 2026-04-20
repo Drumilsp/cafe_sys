@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiErrorMessage, requestWithRetry } from '../utils/api';
 
 const AuthContext = createContext();
 
@@ -27,14 +28,14 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const response = await axios.get('/api/auth/me');
+      const response = await requestWithRetry(() => axios.get('/api/auth/me'));
       if (response.data.data.role !== 'owner') {
         logout();
         throw new Error('Access denied. Owner account required.');
       }
       setUser(response.data.data);
     } catch (error) {
-      console.error('Failed to fetch user:', error);
+      console.error('Failed to fetch owner user:', getApiErrorMessage(error, 'Unable to load session'));
       logout();
     } finally {
       setLoading(false);

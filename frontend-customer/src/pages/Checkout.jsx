@@ -24,6 +24,7 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('counter');
   const [serviceType, setServiceType] = useState('counter'); // 'counter' | 'table'
   const [tableNumber, setTableNumber] = useState('');
+  const [customerComment, setCustomerComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -81,6 +82,7 @@ const Checkout = () => {
         }),
         paymentMethod: ENABLE_PAYMENT ? paymentMethod : 'counter',
         serviceType,
+        customerComment: customerComment.trim(),
         ...(serviceType === 'table' ? { tableNumber: tableNumber.trim() } : {}),
       };
 
@@ -211,6 +213,22 @@ const Checkout = () => {
                 {tablesError && <p className="section-hint">{tablesError}</p>}
               </div>
             )}
+          </div>
+
+          <div className="payment-section">
+            <h2>Add Comment</h2>
+            <div className="form-group">
+              <label htmlFor="customerComment">Special instructions for your order</label>
+              <textarea
+                id="customerComment"
+                value={customerComment}
+                onChange={(e) => setCustomerComment(e.target.value)}
+                placeholder="Example: less spicy, no onion, bring extra tissues"
+                maxLength="300"
+                rows="4"
+              />
+              <p className="section-hint">{customerComment.length}/300 characters</p>
+            </div>
           </div>
 
           {error && <div className="error">{error}</div>}
