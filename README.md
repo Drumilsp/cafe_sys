@@ -2,7 +2,7 @@
 
 A production-ready, scalable QR-based cafe ordering system with separate customer and owner interfaces.
 
-## 🏗️ Project Structure
+##  Project Structure
 
 ```
 .
@@ -33,7 +33,7 @@ A production-ready, scalable QR-based cafe ordering system with separate custome
     └── package.json
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -110,7 +110,7 @@ npm run dev
 
 Owner app will run on `http://localhost:3001`
 
-## 🔐 Authentication
+##  Authentication
 
 ### OTP System
 
@@ -135,7 +135,7 @@ db.users.updateOne(
 )
 ```
 
-## 📡 API Endpoints
+##  API Endpoints
 
 ### Public Endpoints
 
@@ -159,7 +159,7 @@ db.users.updateOne(
 - `PUT /api/menu/:id` - Update menu item
 - `PATCH /api/menu/:id/availability` - Toggle item availability
 
-## 🗄️ Database Models
+##  Database Models
 
 ### User
 - `name` (String, required)
@@ -183,34 +183,34 @@ db.users.updateOne(
 - `paymentStatus` (Enum: 'pending' | 'paid')
 - `orderStatus` (Enum: 'pending' | 'verifying_payment' | 'preparing' | 'ready' | 'delivered')
 
-## 🎨 Features
+##  Features
 
 ### Customer Features
-- ✅ Phone-based login with OTP
-- ✅ Browse menu with category filters
-- ✅ Add items to cart
-- ✅ Checkout with payment method selection
-- ✅ Real-time order status tracking (polling)
-- ✅ View order history
+-  Phone-based login with OTP
+-  Browse menu with category filters
+-  Add items to cart
+-  Checkout with payment method selection
+-  Real-time order status tracking (polling)
+-  View order history
 
 ### Owner Features
-- ✅ Owner dashboard with order management
-- ✅ Filter orders by status
-- ✅ Update order status (pending → verifying payment → preparing → ready → delivered)
-- ✅ Menu management (add, edit, toggle availability)
-- ✅ View customer information for each order
+-  Owner dashboard with order management
+-  Filter orders by status
+-  Update order status (pending → verifying payment → preparing → ready → delivered)
+-  Menu management (add, edit, toggle availability)
+-  View customer information for each order
 
-## 🔒 Security Features
+##  Security Features
 
-- ✅ Helmet.js for security headers
-- ✅ CORS configuration
-- ✅ Rate limiting (300 requests per 15 minutes)
-- ✅ JWT-based authentication
-- ✅ Role-based access control
-- ✅ Input validation
-- ✅ MongoDB injection protection (Mongoose)
+-  Helmet.js for security headers
+-  CORS configuration
+-  Rate limiting (300 requests per 15 minutes)
+-  JWT-based authentication
+-  Role-based access control
+-  Input validation
+-  MongoDB injection protection (Mongoose)
 
-## ☁️ Deployment
+##  Deployment
 
 ### Backend (Render)
 
@@ -234,7 +234,7 @@ db.users.updateOne(
 3. Add to backend `.env` file
 4. Whitelist IP addresses (0.0.0.0/0 for Render)
 
-## 🧪 Testing
+##  Testing
 
 ### Test OTP Flow
 
@@ -282,7 +282,7 @@ Create `.env` files in frontend directories:
 VITE_API_URL=http://localhost:5000
 ```
 
-## 🚧 Future Enhancements
+##  Future Enhancements
 
 - [ ] Real SMS OTP integration
 - [ ] WebSocket for real-time updates
@@ -294,10 +294,10 @@ VITE_API_URL=http://localhost:5000
 - [ ] Push notifications
 - [ ] Admin panel
 
-## 📄 License
+##  License
 
 ISC
 
-## 👥 Support
+##  Support
 
 For issues or questions, please open an issue on GitHub.
