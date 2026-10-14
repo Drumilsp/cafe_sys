@@ -13,9 +13,8 @@ const PORT = process.env.PORT || 3000;
     // Connect to database
     await connectDB();
 
-    // Ensure default data
+    // Optional bootstrap owner, only when explicitly enabled
     await ensureDefaultOwner();
-    console.log('Default owner ensured');
 
     // Start server (important: 0.0.0.0)
     app.listen(PORT, '0.0.0.0', () => {

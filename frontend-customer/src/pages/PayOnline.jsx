@@ -146,7 +146,7 @@ const PayOnline = () => {
       <div className="container">
         <div className="payonline-card">
           <h1>Pay Online</h1>
-          <p className="payonline-subtitle">Tap a UPI app below to pay instantly.</p>
+          <p className="payonline-subtitle">Tap a UPI app below, then submit for owner verification.</p>
 
           {error && <div className="error">{error}</div>}
 
@@ -202,9 +202,9 @@ const PayOnline = () => {
 
           {/* I Have Paid */}
           <div className="payonline-paid-section">
-            <p className="paid-hint">After completing payment in your UPI app, tap below:</p>
+            <p className="paid-hint">After completing payment in your UPI app, submit it for owner verification:</p>
             <button type="button" className="btn-paid" onClick={handlePaid}>
-              ✓ I HAVE PAID
+              ✓ SUBMIT PAYMENT FOR VERIFICATION
             </button>
           </div>
 

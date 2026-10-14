@@ -692,7 +692,14 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     // Update order status
+    const wasVerifyingPayment = order.orderStatus === 'verifying_payment';
+
     order.orderStatus = normalizedRequested;
+
+    if (wasVerifyingPayment && normalizedRequested === 'preparing') {
+      order.paymentStatus = 'paid';
+    }
+
     if (normalizedRequested === 'collect_payment') {
       order.paymentStatus = 'paid';
     }
@@ -912,7 +919,7 @@ exports.updateOrderItemPrepared = async (req, res) => {
 /**
  * PATCH /api/orders/:id/customer-paid
  * Customer indicates they have paid via UPI (online payment).
- * Sets orderStatus to verifying_payment and paymentStatus to paid.
+ * Sets orderStatus to verifying_payment; owner must confirm final payment.
  */
 exports.customerMarkedPaid = async (req, res) => {
   try {
@@ -950,7 +957,7 @@ exports.customerMarkedPaid = async (req, res) => {
       });
     }
 
-    order.paymentStatus = 'paid';
+    order.paymentStatus = 'pending';
     order.orderStatus = 'verifying_payment';
     await order.save();
 

@@ -948,7 +948,7 @@ const Dashboard = () => {
                   )}
                   {ENABLE_PAYMENT && order.orderStatus === 'verifying_payment' && (
                     <div className="order-actions">
-                      <button onClick={() => updateOrderStatus(order._id, 'preparing')} className="status-btn">Verify Payment</button>
+                      <button onClick={() => updateOrderStatus(order._id, 'preparing')} className="status-btn">Confirm Payment Received</button>
                     </div>
                   )}
                   {getNextStatus(order.orderStatus) && (!ENABLE_PAYMENT || order.orderStatus !== 'verifying_payment') && (
@@ -1096,7 +1096,7 @@ const Dashboard = () => {
                     {renderCustomerComment(order)}
                     <div className="kitchen-actions">
                       {ENABLE_PAYMENT && order.orderStatus === 'verifying_payment' && (
-                        <button className="kitchen-btn start" onClick={() => updateOrderStatus(order._id, 'preparing')}>Verify Payment</button>
+                        <button className="kitchen-btn start" onClick={() => updateOrderStatus(order._id, 'preparing')}>Confirm Payment Received</button>
                       )}
                       {order.orderStatus === 'pending' && (
                         <button className="kitchen-btn start" onClick={() => updateOrderStatus(order._id, 'preparing')}>Start Preparing</button>

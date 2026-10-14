@@ -1,303 +1,310 @@
 # QR-Based Cafe Ordering System
 
-A production-ready, scalable QR-based cafe ordering system with separate customer and owner interfaces.
+A full-stack QR-based cafe ordering system built for a local cafe pilot, with customer ordering and owner management workflows.
 
-##  Project Structure
+## Status
 
-```
+QR Cafe was built and deployed for a 2--3 month local cafe pilot and served 100+ customers. The original production domain is no longer active because the cafe later returned to manual order management. The source code remains available for review, and the app can be run locally for demo purposes.
+
+## Pilot Learning
+
+The main adoption issue was operational rather than purely technical: the cafe owner did not have a convenient dedicated device/process to manage incoming orders, so they eventually returned to manual ordering. This shaped later fixes around owner-side payment confirmation and safer operational workflows.
+
+## Recent Hardening Fixes
+
+- Removed unsafe default owner credential behavior.
+- Changed UPI payment flow so customer submission remains pending until owner confirmation.
+- Updated owner dashboard wording from “Verify Payment” to “Confirm Payment Received”.
+
+## Project Structure
+
+```text
 .
-├── backend/                 # Node.js + Express backend
-│   ├── src/
-│   │   ├── config/         # Database configuration
-│   │   ├── models/         # Mongoose models (User, Menu, Order)
-│   │   ├── controllers/   # Route controllers
-│   │   ├── routes/         # API routes
-│   │   ├── middleware/    # Auth middleware
-│   │   ├── app.js         # Express app setup
-│   │   └── server.js      # Server entry point
-│   ├── .env               # Environment variables
-│   └── package.json
-├── frontend-customer/      # Customer-facing React app
-│   ├── src/
-│   │   ├── pages/         # Page components
-│   │   ├── components/    # Reusable components
-│   │   ├── context/       # React contexts (Auth, Cart)
-│   │   └── App.jsx
-│   └── package.json
-└── frontend-owner/         # Owner dashboard React app
-    ├── src/
-    │   ├── pages/         # Dashboard & Menu Management
-    │   ├── components/    # Reusable components
-    │   ├── context/       # Auth context
-    │   └── App.jsx
-    └── package.json
+├── backend/                 # Node.js + Express + MongoDB API
+├── frontend-customer/       # Customer-facing React app
+├── frontend-owner/          # Owner dashboard React app
+└── docs/screenshots/        # Customer and owner UI screenshots
 ```
 
-##  Quick Start
+## Screenshots
+
+### Customer Flow
+
+#### Login
+![Customer login](docs/screenshots/customer-login.png)
+
+#### Menu
+![Customer menu](docs/screenshots/customer_menu.png)
+
+#### Cart
+![Customer cart](docs/screenshots/customer-cart.png)
+
+#### Checkout
+![Customer checkout](docs/screenshots/customer-checkout.png)
+
+#### Order Confirmation
+![Customer order confirmation](docs/screenshots/customer-confirmation.png)
+
+#### My Orders
+![Customer my orders](docs/screenshots/customer-myorders.png)
+
+### Owner Flow
+
+#### Login
+![Owner login](docs/screenshots/owner-login.png)
+
+#### Dashboard
+![Owner dashboard](docs/screenshots/owner-dashboard.png)
+
+#### Menu Management
+![Owner menu management](docs/screenshots/owner-menumnagement.png)
+
+#### Add Item
+![Owner add item](docs/screenshots/owner-itemadd.png)
+
+#### Manual Order
+![Owner manual order](docs/screenshots/owner-manualorder.png)
+
+#### Table Management
+![Owner table management](docs/screenshots/owner-tabelmanagment.png)
+
+#### Order History
+![Owner order history](docs/screenshots/owner-history.png)
+
+#### Settings
+![Owner settings](docs/screenshots/owner-setting.png)
+
+## Quick Start
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- MongoDB Atlas account (or local MongoDB)
-- npm or yarn
+- Node.js 24.x, matching the package `engines` field
+- MongoDB Atlas or local MongoDB
+- npm
 
 ### Backend Setup
 
-1. Navigate to backend directory:
 ```bash
 cd backend
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Create `.env` file (copy from `.env.example`):
-```bash
 cp .env.example .env
 ```
 
-4. Update `.env` with your MongoDB connection string and JWT secret:
+Update `backend/.env`:
+
 ```env
 MONGO_URI=your-mongodb-connection-string
 JWT_SECRET=your-secret-key-min-32-chars
 PORT=5000
+NODE_ENV=development
+ENABLE_PAYMENT=true
 ```
 
-5. Start the backend server:
+Start the backend:
+
 ```bash
 npm run dev
 ```
 
-Backend will run on `http://localhost:5000`
+Backend runs on `http://localhost:5000` when `PORT=5000` is set.
 
 ### Customer Frontend Setup
 
-1. Navigate to customer frontend:
 ```bash
 cd frontend-customer
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Start development server:
-```bash
+cp .env.example .env
 npm run dev
 ```
 
-Customer app will run on `http://localhost:3000`
+Use this local env:
+
+```env
+VITE_API_URL=http://localhost:5000
+VITE_ENABLE_PAYMENT=true
+VITE_UPI_ID=cafe@upi
+VITE_CAFE_NAME=Cafe%20Saarchi
+```
+
+Customer app runs on `http://localhost:3000`.
 
 ### Owner Frontend Setup
 
-1. Navigate to owner frontend:
 ```bash
 cd frontend-owner
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Start development server:
-```bash
+cp .env.example .env
 npm run dev
 ```
 
-Owner app will run on `http://localhost:3001`
+Use this local env:
 
-##  Authentication
+```env
+VITE_API_URL=http://localhost:5000
+VITE_ENABLE_PAYMENT=true
+```
 
-### OTP System
+Owner app runs on `http://localhost:3001`.
 
-OTP is generated by the backend and stored temporarily in MongoDB (expires in 10 minutes).
+## Authentication
+
+### Customer OTP
+
+Customers log in with name, phone number, and OTP.
 
 OTP delivery is controlled by `SMS_PROVIDER`:
 
-- `mock`: logs OTP in backend console
-- `website`: returns OTP in API response so the website can display it
+- `mock`: logs OTP in backend console; development only
+- `website`: returns OTP in API response so the website can display it; demo only
 - `fast2sms`: sends OTP via Fast2SMS
 
-### User Roles
+Generated OTPs expire after 10 minutes.
 
-- **Customer**: Can browse menu, place orders, view order status
-- **Owner**: Can manage menu, view all orders, update order status
+### Owner Account Setup
 
-**Note**: To create an owner account, you need to manually update the user role in MongoDB:
-```javascript
-db.users.updateOne(
-  { phone: "1234567890" },
-  { $set: { role: "owner" } }
-)
+Default owner creation is disabled unless explicitly enabled.
+
+To bootstrap an owner locally, set these in `backend/.env`:
+
+```env
+CREATE_DEFAULT_OWNER=true
+DEFAULT_OWNER_PHONE=your-owner-phone
+DEFAULT_OWNER_PASSWORD=your-strong-password
+DEFAULT_OWNER_NAME=Cafe Owner
+DEFAULT_OWNER_USERNAME=owner
 ```
 
-##  API Endpoints
+Then start the backend once. Do not use weak credentials in production. The password is not logged.
 
-### Public Endpoints
+## API Endpoints
+
+### Public
 
 - `GET /api/menu` - Get all menu items
 - `GET /api/menu?available=true` - Get only available items
 - `POST /api/auth/request-otp` - Request OTP
 - `POST /api/auth/verify-otp` - Verify OTP and login
 
-### Customer Endpoints (Protected)
+### Customer Protected
 
 - `POST /api/orders` - Create new order
 - `GET /api/orders/my` - Get customer's orders
 - `GET /api/orders/:id` - Get order details
+- `PATCH /api/orders/:id/customer-paid` - Submit online payment claim for owner verification
 
-### Owner Endpoints (Protected)
+### Owner Protected
 
 - `GET /api/orders` - Get all orders
-- `GET /api/orders?status=pending` - Filter orders by status
 - `PATCH /api/orders/:id/status` - Update order status
+- `PATCH /api/orders/:id/payment` - Mark payment as received
+- `POST /api/orders/manual` - Create manual order
 - `POST /api/menu` - Add menu item
 - `PUT /api/menu/:id` - Update menu item
 - `PATCH /api/menu/:id/availability` - Toggle item availability
+- `GET /api/tables/all` - Manage tables
 
-##  Database Models
+## Database Models
 
 ### User
-- `name` (String, required)
-- `phone` (String, required, unique)
-- `role` (Enum: 'customer' | 'owner')
-- `otp` (Object: code, expiresAt)
+
+- `name`
+- `phone`
+- `role`: `customer` or `owner`
+- `username` and `password` for owner login
+- `otp`: code and expiry for customer login
 
 ### Menu
-- `name` (String, required)
-- `price` (Number, required, min: 0)
-- `available` (Boolean, default: true)
-- `category` (String)
-- `imageUrl` (String)
+
+- `name`
+- `price`
+- `available`
+- `category`
+- `imageUrl`
+- `isVeg`
+- `displayOrder`
 
 ### Order
-- `orderId` (String, unique, indexed)
-- `customer` (Reference to User)
-- `items` (Array of { menuItem, quantity, priceAtTime })
-- `totalAmount` (Number)
-- `paymentMethod` (Enum: 'online' | 'counter')
-- `paymentStatus` (Enum: 'pending' | 'paid')
-- `orderStatus` (Enum: 'pending' | 'verifying_payment' | 'preparing' | 'ready' | 'delivered')
 
-##  Features
+- `orderId`
+- `customer`
+- `items`
+- `totalAmount`
+- `paymentMethod`: `online` or `counter`
+- `paymentStatus`: `pending` or `paid`
+- `orderStatus`: `pending`, `verifying_payment`, `preparing`, `ready`, `delivered`, `collect_payment`
+- `serviceType` and `tableNumber`
 
-### Customer Features
--  Phone-based login with OTP
--  Browse menu with category filters
--  Add items to cart
--  Checkout with payment method selection
--  Real-time order status tracking (polling)
--  View order history
+## Features
 
-### Owner Features
--  Owner dashboard with order management
--  Filter orders by status
--  Update order status (pending → verifying payment → preparing → ready → delivered)
--  Menu management (add, edit, toggle availability)
--  View customer information for each order
+### Customer
 
-##  Security Features
+- Phone-based OTP login
+- Menu browsing with search/filter/sort
+- Cart and checkout
+- Counter or UPI-style payment flow
+- Owner-confirmed online payment status
+- Order confirmation and order history
 
--  Helmet.js for security headers
--  CORS configuration
--  Rate limiting (300 requests per 15 minutes)
--  JWT-based authentication
--  Role-based access control
--  Input validation
--  MongoDB injection protection (Mongoose)
+### Owner
 
-##  Deployment
+- Owner login with JWT-based protected routes
+- Dashboard for active orders
+- Kitchen/preparation view
+- Manual order creation
+- Menu management
+- Table management
+- Order history
+- Notification sound settings
 
-### Backend (Render)
+## Security Notes
 
-1. Connect your GitHub repository
-2. Set build command: `cd backend && npm install`
-3. Set start command: `cd backend && node src/server.js`
-4. Add environment variables in Render dashboard
+- Helmet security headers
+- CORS configuration
+- API and auth rate limiting
+- JWT authentication
+- Role-based owner/customer route protection
+- Explicit owner bootstrap; no hardcoded default owner password
+- Customer online payment submission requires owner confirmation before final `paid` status
 
-### Frontend (Vercel/Netlify)
+## Testing / Manual Demo
 
-1. Connect repository
-2. Set build directory: `frontend-customer` or `frontend-owner`
-3. Set build command: `npm run build`
-4. Set output directory: `dist`
-5. Add environment variable: `VITE_API_URL=https://your-backend-url.com`
+### Customer Flow
 
-### MongoDB Atlas
+1. Start backend and customer frontend.
+2. Open customer app.
+3. Request OTP with any valid 10-digit phone number.
+4. Use the OTP from the console or website response depending on `SMS_PROVIDER`.
+5. Add items to cart.
+6. Checkout and place an order.
+7. Track order status from confirmation or order history.
 
-1. Create free cluster
-2. Get connection string
-3. Add to backend `.env` file
-4. Whitelist IP addresses (0.0.0.0/0 for Render)
+### Owner Flow
 
-##  Testing
+1. Create/bootstrap owner account using env variables.
+2. Start backend and owner frontend.
+3. Login as owner.
+4. View incoming orders.
+5. Confirm payment if order is in `verifying_payment`.
+6. Move order through preparing, ready, and delivered states.
+7. Manage menu items and tables.
 
-### Test OTP Flow
+## Deployment Notes
 
-1. Use any 10-digit phone number
-2. Enter name and phone
-3. Use OTP: `1234`
-4. Login successfully
+The app was previously deployed for a cafe pilot. For a new deployment:
 
-### Test Order Flow
+- Configure backend environment variables on the hosting provider.
+- Set frontend `VITE_API_URL` to the deployed backend URL.
+- Use real SMS/payment providers before relying on production OTP or payment flows.
+- Keep default owner creation disabled unless deliberately bootstrapping a new deployment.
 
-1. Login as customer
-2. Add items to cart
-3. Proceed to checkout
-4. Select payment method
-5. Place order
-6. View order confirmation with Order ID
+## Future Improvements
 
-### Test Owner Flow
+- Add backend integration tests for auth/order/payment/table flows.
+- Fix table assignment race condition with reservation or transaction logic.
+- Add production SMS provider configuration.
+- Add verified payment gateway integration if online payment is required.
+- Split large dashboard/controller files after core behavior is tested.
 
-1. Create owner account (update MongoDB)
-2. Login as owner
-3. View dashboard with orders
-4. Update order status
-5. Manage menu items
-
-## 📝 Environment Variables
-
-### Backend (.env)
-
-```env
-MONGO_URI=mongodb+srv://...
-PORT=4000
-JWT_SECRET=your-secret-key
-JWT_EXPIRES_IN=7d
-NODE_ENV=production
-CLOUDINARY_CLOUD_NAME=...
-CLOUDINARY_API_KEY=...
-CLOUDINARY_API_SECRET=...
-```
-
-### Frontend (Vite)
-
-Create `.env` files in frontend directories:
-```env
-VITE_API_URL=http://localhost:5000
-```
-
-##  Future Enhancements
-
-- [ ] Real SMS OTP integration
-- [ ] WebSocket for real-time updates
-- [ ] Payment gateway integration (Razorpay/Stripe)
-- [ ] Image upload via Cloudinary
-- [ ] Multi-cafe support
-- [ ] Table number assignment
-- [ ] Analytics dashboard
-- [ ] Push notifications
-- [ ] Admin panel
-
-##  License
+## License
 
 ISC
-
-##  Support
-
-For issues or questions, please open an issue on GitHub.
