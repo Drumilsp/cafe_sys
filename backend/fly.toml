@@ -1,6 +1,6 @@
-# fly.toml app configuration file generated for cafe-saarchi-backend-03 on 2026-04-03T09:35:11Z
+# fly.toml app configuration file generated for cafe-saarchi-backend-03 on 2026-10-12T05:55:33Z
 #
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+# See https://docs.fly.io/reference/configuration for information about how to use this file.
 #
 
 app = 'cafe-saarchi-backend-03'
@@ -11,7 +11,7 @@ primary_region = 'sin'
 [http_service]
   internal_port = 3000
   force_https = true
-  auto_stop_machines = 'off'
+  auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1
   processes = ['app']
